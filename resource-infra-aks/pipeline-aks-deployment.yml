@@ -56,11 +56,11 @@ stages:
                       AZURE_ST_NAME="strg$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
                       echo "    Creating Storage Account $AZURE_ST_NAME..."
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
-                        echo '    Storage Account "$AZURE_ST_NAME" already exists.'
+                        echo "    Storage Account \"$AZURE_ST_NAME\" already exists."
                       else
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
                         #az storage container create --name tfstate --account-name $AZURE_ST_NAME
-                        echo '    Storage Account "$AZURE_ST_NAME" and Container "tfstate" created.'
+                        echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""
                       echo "Storage Account creation complete"
