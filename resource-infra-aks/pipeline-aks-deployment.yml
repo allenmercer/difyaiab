@@ -56,6 +56,7 @@ stages:
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
                         az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode login
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
+                        # Need to add standard tags to storage account.
                       fi
                       echo ""
                       echo "Storage Account creation complete"
