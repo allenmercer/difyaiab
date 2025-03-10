@@ -48,7 +48,7 @@ stages:
                     inlineScript: |
                       set -e  # Fail if any command fails
                       echo "Getting Resource Group Location..."
-                      AZURE_RG_LOCATION=$(az group show --name $(AZURE_RG_NAME) | jq -r '.location')
+                      AZURE_RG_LOCATION=$(az group show --name "$(AZURE_RG_NAME)" | jq -r '.location')
                       echo $AZURE_RG_LOCATION
                       echo ""
                       echo ""
