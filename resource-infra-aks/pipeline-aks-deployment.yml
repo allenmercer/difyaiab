@@ -47,8 +47,20 @@ stages:
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      echo "Getting Resource Group Location..."
+                      echo "Creating Storage Account..."
+                      echo ""
+                      echo "    Getting Resource Group Location..."
                       AZURE_RG_LOCATION=$(az group show --name "$(AZURE_RG_NAME)" | jq -r '.location')
-                      echo $AZURE_RG_LOCATION
+                      echo "    Resource group location: $AZURE_RG_LOCATION"
                       echo ""
+                      AZURE_ST_NAME="strg$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
+                      echo "    Creating Storage Account $AZURE_ST_NAME..."
+                      if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
+                        echo '    Storage Account "$AZURE_ST_NAME" already exists.'
+                      else
+                        az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
+                        az storage container create --name tfstate --account-name $AZURE_ST_NAME
+                        echo '    Storage Account "$AZURE_ST_NAME" and Container "tfstate" created.'
+                      fi
                       echo ""
+                      echo "Storage Account creation complete"
