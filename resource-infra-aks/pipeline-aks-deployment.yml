@@ -53,13 +53,14 @@ stages:
                       AZURE_RG_LOCATION=$(az group show --name "$(AZURE_RG_NAME)" | jq -r '.location')
                       echo "    Resource group location: $AZURE_RG_LOCATION"
                       echo ""
-                      AZURE_ST_NAME="strg$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
                       echo "    Creating Storage Account $AZURE_ST_NAME..."
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
                         echo "    Storage Account \"$AZURE_ST_NAME\" already exists."
                       else
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
-                        #az storage container create --name tfstate --account-name $AZURE_ST_NAME
+                        AZURE_ST_KEY=$(az storage account keys list --account-name $AZURE_ST_NAME | jq -r '.[0]|.value')
+                        az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode key $AZURE_ST_KEY
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""
