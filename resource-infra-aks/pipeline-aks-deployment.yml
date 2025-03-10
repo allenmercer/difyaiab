@@ -111,4 +111,4 @@ stages:
                         echo "    Storage Account \"$AZURE_ST_NAME\" does not exist."
                       fi
                       echo ""
-                      echo "Storage Account destruction complete"
+                      echo "Storage Account deletion complete"
