@@ -1,0 +1,45 @@
+An "Environment" is an environment in ADO.
+A "Lifecycle Environment" can be POC, DEV, PROD, etc.
+
+Create a new Environment in ADO for general build and destroy jobs.
+Name the Environment with <SERVICE_NAME>global<GitHub Repo Folder> 
+e.g. difyaia-global-resource-infra-aks
+
+Create a new Environment in ADO for EVERY Lifecycle Environment that you plan to depoly.
+Name EACH Environment with <SERVICE_NAME><LIFECYCLE_ENVRIONMENT><GitHub Repo Folder> 
+e.g. difyaia-poc-resource-infra-aks
+and  difyaiab-dev-resource-infra-aks - If necessary.
+and  difyaiab-prod-resource-infra-aks -  If necessary.
+Environments will contain the lifecycle environment so that we can view the deployment of each lifecycle separately.
+
+Create a new Variable Group in ADO.
+Name the Variable Group with <SERVICE_NAME>global<GitHub Repo Folder>
+e.g. difyaiab-global-resource-infra-aks
+
+Create variables:
+AZURE_RG_NAME           difyai-agent-builder-poc                    The EXISTING resource group name that has been provided to us.
+# LOCATION              eastus2                                     This is unnecessary as it will be derived from the RG_NAME.
+AZURE_CLIENT_ID         f6b25cc8-5fc1-448b-b798-e8ad1045647c        Make this value secret with the lock button.
+AZURE_CLIENT_SECRET                                                 Make this value secret with the lock button.
+AZURE_TENANT_ID         78e9dcbe-e650-488b-9f16-902c90e8ff5f        Make this value secret with the lock button.
+AZURE_SUBSCRIPTION_ID   7c85ee7e-a3a7-4a96-8952-94b2ea0b1c95        Make this value secret with the lock button.
+AZURE_PROJECT_NAME      difyaiab                                    Unique name for the service.  e.g. dify ai agent builder 
+# Variable below this line should rarely be touched.
+AZURE_PROJECT_INSTANCE  001                                         Unique instance for the service.  e.g. 001
+# We define the lifecycle environment names here and then assign ENVIRONMENT to one of the variables below in the pipeline.
+# That way we can use the same pipeline for multi-lifecycle deployments.
+ADO_POC_ENVIRONMENT     poc                                         POC lifecycle environment name.
+ADO_DEV_ENVIRONMENT     dev                                         DEV lifecycle environment name.
+ADO_PROD_ENVIRONMENT    prod                                        PROD lifecycle environment name.
+
+Create a new Pipeline in ADO.
+Choose your GitHub Repo and pipeline-aks-deployment.yml file.
+Save the pipeline.  DO NOT run the pipeline.
+Click Edit.  Then Triggers.
+On the YAML tab, Name the Pipeline in ADO.
+Name the Pipeline with <SERVICE_NAME>global<GitHub Repo Folder>.
+e.g. difyaia-global-resource-infra-aks
+Then save the pipeline.
+Under "Get sources" you can choose your branch and repo and other cool stuff.
+Under Triggers, add you triggers for CI and Pull Requests.
+Save again.
