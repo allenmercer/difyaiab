@@ -9,7 +9,7 @@ stages:
   - stage: terraformBackendStorageDeployment
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Backend Storage Deployment'
-    #trigger: manual
+    trigger: manual
     jobs:
       - deployment: terraformBackendStorageDeployment
         # The deployment displayName is displayed in ADO under Jobs.
@@ -47,21 +47,68 @@ stages:
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      echo "Creating Storage Account..."
-                      echo ""
-                      echo "    Getting Resource Group Location..."
-                      AZURE_RG_LOCATION=$(az group show --name "$(AZURE_RG_NAME)" | jq -r '.location')
-                      echo "    Resource group location: $AZURE_RG_LOCATION"
-                      echo ""
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
-                      echo "    Creating Storage Account $AZURE_ST_NAME..."
+                      echo "Creating Storage Account $AZURE_ST_NAME..."
+                      echo ""
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
                         echo "    Storage Account \"$AZURE_ST_NAME\" already exists."
                       else
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
-                        #AZURE_ST_KEY=$(az storage account keys list --account-name $AZURE_ST_NAME | jq -r '.[0]|.value')
                         az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode login
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""
                       echo "Storage Account creation complete"
+
+  - stage: backendInfrastructureDestruction
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Backend Infrastructure Destruction'
+    trigger: manual
+    jobs:
+      - deployment: backendInfrastructureDestruction
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Backend Infrastructure Destruction'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: difyaiab-global-resource-infra-aks
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Azure CLI Login Step.
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Azure CLI Login'
+                  inputs:
+                    azureSubscription: 'global-azdo-spn'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                # Show Logged In User.
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Storage Account Deletion'
+                  inputs:
+                    azureSubscription: 'global-azdo-spn'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
+                      echo "Deleting Storage Account $AZURE_ST_NAME..."
+                      echo ""
+                      if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then
+                        az storage account delete --name $AZURE_ST_NAME -g "$(AZURE_RG_NAME)" --yes
+                        echo "    Storage Account \"$AZURE_ST_NAME\" deleted."
+                      else
+                        echo "    Storage Account \"$AZURE_ST_NAME\" does not exist."
+                      fi
+                      echo ""
+                      echo "Storage Account destruction complete"
