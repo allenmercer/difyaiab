@@ -59,8 +59,8 @@ stages:
                         echo "    Storage Account \"$AZURE_ST_NAME\" already exists."
                       else
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
-                        AZURE_ST_KEY=$(az storage account keys list --account-name $AZURE_ST_NAME | jq -r '.[0]|.value')
-                        az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode key $AZURE_ST_KEY
+                        #AZURE_ST_KEY=$(az storage account keys list --account-name $AZURE_ST_NAME | jq -r '.[0]|.value')
+                        az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode login
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""
