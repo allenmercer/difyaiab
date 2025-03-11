@@ -23,9 +23,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "aksnp001" {
   mode                  = "User"
   name                  = local.nodepool_user_name
   orchestrator_version  = data.azurerm_kubernetes_service_versions.current.latest_version
-  os_disk_size_gb       = aks_user_disksize
+  os_disk_size_gb       = var.aks_user_disksize
   os_type               = "Linux" # Default is Linux, we can change to Windows
-  vm_size               = aks_user_vmsize
+  vm_size               = var.aks_user_vmsize
   priority              = "Regular"  # Default is Regular, we can change to Spot with additional settings like eviction_policy, spot_max_price, node_labels and node_taints
   node_labels = local.nodepool_user_labels
   tags = var.tags
