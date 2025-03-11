@@ -1,6 +1,6 @@
-# Terraform Data Retreival
+# Terraform Data Blocks
 
 data "azurerm_resource_group" "rg" {
-  # name = "${var.resource_group_name}-${var.environment}"  
-  name = "${var.resource_group_name}"
+  # name = "${var.rg_name}-${var.environment}"  
+  name = var.rg_name
 }
