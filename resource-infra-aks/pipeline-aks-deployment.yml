@@ -101,57 +101,6 @@ stages:
                   displayName: 'Terrafrom Installer'
                   inputs:
                     terraformVersion: 'latest'
-
-                # # Test 1
-                # - task: TerraformTaskV4@4
-                #   inputs:
-                #     provider: 'azurerm'
-                #     command: 'init'
-                #     backendServiceArm: '$(BACKEND_SERVICE_ARM)'
-                #     backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
-                #     backendAzureRmStorageAccountName: 'stterraformdifyai001'
-                #     backendAzureRmContainerName: 'tfstate'
-                #     backendAzureRmKey: 'aks-test.tfstate'
-
-                # # Test2
-                # - task: TerraformTaskV4@4
-                #   inputs:
-                #     provider: 'azurerm'
-                #     command: 'init'
-                #     backendAzureRmUseEnvironmentVariablesForAuthentication: true
-                #     #backendAzureRmUseEntraIdForAuthentication: true
-                #     backendServiceArm: 'global-azdo-spn'
-                #     backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
-                #     backendAzureRmStorageAccountName: 'stterraformdifyai001'
-                #     backendAzureRmContainerName: 'tfstate'
-                #     backendAzureRmKey: 'aks-test.tfstate'
-
-                # # Test 3
-                # - task: TerraformTaskV4@4
-                #   inputs:
-                #     provider: 'azurerm'
-                #     command: 'init'
-                #     #backendAzureRmUseEnvironmentVariablesForAuthentication: true
-                #     backendAzureRmUseEntraIdForAuthentication: true
-                #     backendServiceArm: 'global-azdo-spn'
-                #     backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
-                #     backendAzureRmStorageAccountName: 'stterraformdifyai001'
-                #     backendAzureRmContainerName: 'tfstate'
-                #     backendAzureRmKey: 'aks-test.tfstate'
-
-                # - task: TerraformTaskV4@4
-                #   inputs:
-                #     provider: 'azurerm'
-                #     command: 'init'
-                #     workingDirectory: '$(System.DefaultWorkingDirectory)/resource-infra-aks/terraform-manifests'
-                #     backendServiceArm: 'global-azdo-spn'
-                #     backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
-                #     backendAzureRmStorageAccountName: 'stterraformdifyai001'
-                #     backendAzureRmContainerName: 'tfstate'
-                #     backendAzureRmKey: 'aks-test.tfstate'
-                #     allowTelemetryCollection: false
-                #   displayName: 'Terrafrom Init'
-
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Init'
                   inputs:
