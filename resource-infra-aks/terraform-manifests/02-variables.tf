@@ -67,7 +67,6 @@ variable "aks_user_disksize" {
   default = 30
   type = number
 }
----
 
 variable "tags" {
   type = map(string)
