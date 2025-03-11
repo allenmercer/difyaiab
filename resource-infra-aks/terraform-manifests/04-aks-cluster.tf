@@ -31,15 +31,15 @@ resource "azurerm_log_analytics_workspace" "insights" {
 }
 
 resource "azurerm_kubernetes_cluster" "aks-cluster" {
-  name                = locals.aks_cluster_name   
-  location            = locals.location
+  name                = local.aks_cluster_name   
+  location            = local.location
   resource_group_name = var.rg_name
-  dns_prefix          = locals.aks_cluster_name
+  dns_prefix          = local.aks_cluster_name
   kubernetes_version = data.azurerm_kubernetes_service_versions.current.latest_version
-  node_resource_group = locals.node_resource_group
+  node_resource_group = local.node_resource_group
 
   default_node_pool {
-    name                    = locals.nodepool_system_name
+    name                    = local.nodepool_system_name
     vm_size                 = "Standard_DS2_v2"
     orchestrator_version    = data.azurerm_kubernetes_service_versions.current.latest_version
     zones                   = var.aks_system_zones
@@ -48,7 +48,7 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
     min_count               = var.aks_system_minnodes
     os_disk_size_gb         = var.aks_system_disksize
     type                    = "VirtualMachineScaleSets"
-    node_labels = locals.nodepool_system_labels
+    node_labels = local.nodepool_system_labels
     tags = var.tags
   }
 
