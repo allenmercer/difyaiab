@@ -2,7 +2,7 @@
 variables:
   - group: difyaiab-global-resource-infra-aks
   - name: LIFECYCLE_ENVIRONMENT
-    value: '$(DEV_ENVIRONMENT)'
+    value: '$(ADO_DEV_ENVIRONMENT)'
 
 # Stage to Deploy Terraform Backend Storage
 stages:
