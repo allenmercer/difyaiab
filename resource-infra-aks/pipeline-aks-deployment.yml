@@ -95,6 +95,7 @@ stages:
                       az account show
                       pwd
                       echo '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                      ls
                       echo "Azure login successful"
                 - task: TerraformInstaller@1
                   displayName: 'Terrafrom Installer'
