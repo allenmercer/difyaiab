@@ -99,6 +99,43 @@ stages:
                   inputs:
                     terraformVersion: 'latest'
 
+                # Test 1
+                - task: TerraformTaskV4@4
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    backendServiceArm: 'global-azdo-spn'
+                    backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
+                    backendAzureRmStorageAccountName: 'stterraformdifyai001'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-test.tfstate'
+
+                # Test2
+                - task: TerraformTaskV4@4
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    backendAzureRmUseEnvironmentVariablesForAuthentication: true
+                    #backendAzureRmUseEntraIdForAuthentication: true
+                    backendServiceArm: 'global-azdo-spn'
+                    backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
+                    backendAzureRmStorageAccountName: 'stterraformdifyai001'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-test.tfstate'
+
+                # Test 3
+                - task: TerraformTaskV4@4
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    #backendAzureRmUseEnvironmentVariablesForAuthentication: true
+                    backendAzureRmUseEntraIdForAuthentication: true
+                    backendServiceArm: 'global-azdo-spn'
+                    backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
+                    backendAzureRmStorageAccountName: 'stterraformdifyai001'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-test.tfstate'
+
                 - task: TerraformTaskV4@4
                   inputs:
                     provider: 'azurerm'
