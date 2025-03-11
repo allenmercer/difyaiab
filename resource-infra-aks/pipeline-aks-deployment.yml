@@ -99,18 +99,18 @@ stages:
                   inputs:
                     terraformVersion: 'latest'
 
-              - task: TerraformTaskV4@4
-                inputs:
-                  provider: 'azurerm'
-                  command: 'init'
-                  workingDirectory: '$(System.DefaultWorkingDirectory)/resource-infra-aks/terraform-manifests'
-                  backendServiceArm: 'global-azdo-spn'
-                  backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
-                  backendAzureRmStorageAccountName: 'stterraformdifyai001'
-                  backendAzureRmContainerName: 'tfstate'
-                  backendAzureRmKey: 'aks-val.tfstate'
-                  allowTelemetryCollection: false
-                displayName: 'Terrafrom Init'
+                - task: TerraformTaskV4@4
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/resource-infra-aks/terraform-manifests'
+                    backendServiceArm: 'global-azdo-spn'
+                    backendAzureRmResourceGroupName: 'difyai-agent-builder-poc'
+                    backendAzureRmStorageAccountName: 'stterraformdifyai001'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-val.tfstate'
+                    allowTelemetryCollection: false
+                  displayName: 'Terrafrom Init'
 
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Init'
@@ -131,10 +131,6 @@ stages:
                     command: 'validate'
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     allowTelemetryCollection: false
-
-
-
-
 
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
