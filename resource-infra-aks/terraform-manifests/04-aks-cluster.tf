@@ -16,14 +16,14 @@ locals {
 
 # Azure Kubernetes Service Versions Block
 data "azurerm_kubernetes_service_versions" "current" {
-  location = locals.location
+  location = local.location
   include_preview = false
 }
 
 # Azure Log Analytics Workspace Block
 resource "azurerm_log_analytics_workspace" "insights" {
-  name                = locals.log_workspace_name
-  location            = locals.location
+  name                = local.log_workspace_name
+  location            = local.location
   resource_group_name = var.rg_name
   retention_in_days   = var.log_retention_days
 
