@@ -30,6 +30,7 @@ resource "azurerm_log_analytics_workspace" "insights" {
   tags = var.tags
 }
 
+# Azure Kubernetes Cluster Block
 resource "azurerm_kubernetes_cluster" "aks-cluster" {
   name                = local.aks_cluster_name   
   location            = local.location

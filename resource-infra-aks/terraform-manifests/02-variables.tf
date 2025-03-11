@@ -38,6 +38,37 @@ variable "aks_system_disksize" {
   type = number
 }
 
+variable "aks_user_vmsize" {
+  description = "Node size for VMs in the AKS User Pool"
+  default = "Standard_DS2_v2"
+  type = string
+}
+
+variable "aks_user_zones" {
+  description = "Zones for VMs in the AKS User Pool"
+  default = [1, 2]
+  type = list
+}
+
+variable "aks_user_minnodes" {
+  description = "Minimum Number of Nodes for AKS User Pool Scaling Set"
+  default = 1
+  type = number
+}
+
+variable "aks_user_maxnodes" {
+  description = "Maximum Number of Nodes for AKS User Pool Scaling Set"
+  default = 3
+  type = number
+}
+
+variable "aks_user_disksize" {
+  description = "Disk Size for Nodes for AKS User Pool"
+  default = 30
+  type = number
+}
+---
+
 variable "tags" {
   type = map(string)
   default = {
