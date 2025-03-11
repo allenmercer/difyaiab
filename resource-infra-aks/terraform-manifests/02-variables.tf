@@ -5,7 +5,7 @@
 variable "log_retention_days" {
   description = "Azure Log Analytics Workspace Log Retention Days"
   default = 30
-  type = integer
+  type = number
 }
 
 variable "aks_system_vmsize" {
@@ -17,25 +17,25 @@ variable "aks_system_vmsize" {
 variable "aks_system_zones" {
   description = "Zones for VMs in the AKS System Pool"
   default = [1, 2]
-  type = array
+  type = list
 }
 
 variable "aks_system_minnodes" {
   description = "Minimum Number of Nodes for AKS System Pool Scaling Set"
   default = 1
-  type = integer
+  type = number
 }
 
 variable "aks_system_maxnodes" {
   description = "Maximum Number of Nodes for AKS System Pool Scaling Set"
   default = 3
-  type = integer
+  type = number
 }
 
 variable "aks_system_disksize" {
   description = "Disk Size for Nodes for AKS System Pool"
   default = 30
-  type = integer
+  type = number
 }
 
 variable "tags" {
