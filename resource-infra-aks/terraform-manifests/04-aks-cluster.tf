@@ -2,10 +2,10 @@
 locals {
     # The location of the Azure Resource Group created for us should be the location for everything.
     location = "${data.azurerm_resource_group.aks_rg.location}"
-    log_workspace_name = "log-${var.project_name}-${var.environment}-${var.location}-${var.project_instance}"
-    aks_cluster_name = "aks-${var.project_name}-${var.environment}-${var.location}-${var.project_instance}"
-    node_resource_group = "nrg-${var.project_name}-${var.environment}-${var.location}-${var.project_instance}"
-    nodepool_system_name = "npsystem-${var.project_name}-${var.environment}-${var.location}-${var.project_instance}"
+    log_workspace_name = "log-${var.project_name}-${var.environment}-${locals.location}-${var.project_instance}"
+    aks_cluster_name = "aks-${var.project_name}-${var.environment}-${locals.location}-${var.project_instance}"
+    node_resource_group = "nrg-${var.project_name}-${var.environment}-${locals.location}-${var.project_instance}"
+    nodepool_system_name = "npsystem-${var.project_name}-${var.environment}-${locals.location}-${var.project_instance}"
     nodepool_system_labels = {
       "nodepool-type"       = "system"
       "environment"         = "${var.environment}"
