@@ -45,19 +45,19 @@ stages:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
-                    ### NEED TO ADD STANDARD TAGS TO ST###
-                    ### NEED TO ADD CONTAINER REGISTRY###
-                    ### NEED TO TIE CONTAINER REGIRSTRY TO AKS###
-                    ### NEED TO ADD PLAN###
-                    ### NEED TO ADD DEPLOY AND DESTROY###
-                    ### NEED TO ADD INGRESS###
-                    ### NEED TO ADD PROMETHEUS###
-                    ### NEED TO ADD UPTIME-KUMA###
-                    ### NEED TO ADD TRAEFIK-WHOAMI###
-                    ### NEED TO ADD NGINX-HELLO###
-                    ### NEED TO ADD BE####
-                    ### NEED TO ADD BE###
-                    ### NEED TO ADD FE###
+                    ### NEED TO ADD STANDARD TAGS TO ST### 1
+                    ### NEED TO ADD CONTAINER REGISTRY### 2
+                    ### NEED TO TIE CONTAINER REGIRSTRY TO AKS### 4
+                    ### NEED TO ADD PLAN### 2
+                    ### NEED TO ADD DEPLOY AND DESTROY### 2
+                    ### NEED TO ADD INGRESS### 1
+                    ### NEED TO ADD PROMETHEUS### 1
+                    ### NEED TO ADD UPTIME-KUMA### .5
+                    ### NEED TO ADD TRAEFIK-WHOAMI### 2
+                    ### NEED TO ADD NGINX-HELLO### .5
+                    ### NEED TO ADD BE#### 8
+                    ### NEED TO ADD BE### 2
+                    ### NEED TO ADD FE### 2
                     inlineScript: |
                       set -e  # Fail if any command fails
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
