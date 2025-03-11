@@ -79,7 +79,7 @@ stages:
               steps:
                 # Checkout GitHub Repository
                 - checkout: self
-                  dispalyName: 'Checkout GitHub Repository'
+                  # dispalyName: 'Checkout GitHub Repository'
                 # Azure CLI Login (Required for Terraform authentication)
                 - task: AzureCLI@2
                   displayName: 'Azure CLI Login'
