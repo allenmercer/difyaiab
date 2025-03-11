@@ -2,7 +2,7 @@
 variables:
   - group: difyaiab-global-resource-infra-aks
   - name: LIFECYCLE_ENVIRONMENT
-    value: $(DEV_ENVIRONMENT)
+    value: '$(DEV_ENVIRONMENT)'
 
 # Stage to Deploy Terraform Backend Storage
 stages:
@@ -72,7 +72,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
-        environment: "difyaiab-$(LIFECYCLE_ENVIRONMENT)-resource-infra-aks"
+        environment: 'difyaiab-$(LIFECYCLE_ENVIRONMENT)-resource-infra-aks'
         strategy:
           runOnce:
             deploy:
