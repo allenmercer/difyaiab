@@ -61,6 +61,64 @@ stages:
                       echo ""
                       echo "Storage Account creation complete"
 
+  - stage: terraformCodeValidation
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Terraform Code Validation'
+    trigger: manual
+    jobs:
+      - deployment: terraformCodeValidation
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Terraform Code Validation'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: difyaiab-"$(LIFECYCLE_ENVIRONMENT)"-resource-infra-aks
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  dispalyName: 'Checkout GitHub Repository'
+                # Azure CLI Login (Required for Terraform authentication)
+                - task: AzureCLI@2
+                  displayName: 'Azure CLI Login'
+                  inputs:
+                    azureSubscription: 'global-azdo-spn'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                - task: TerraformInstaller@1
+                  displayName: 'Terrafrom Installer'
+                  inputs:
+                    terraformVersion: 'latest'
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Init'
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+
+                    backendServiceArm: '$(BACKEND_SERVICE_ARM)'
+                    backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-validate.tfstate'
+                    allowTelemetryCollection: false
+
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Validate'
+                  inputs:
+                    command: 'validate'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    allowTelemetryCollection: false
+
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Backend Infrastructure Destruction'
