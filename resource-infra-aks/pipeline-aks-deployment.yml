@@ -207,7 +207,7 @@ stages:
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
                     backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-validate.tfstate'
+                    backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   inputs:
