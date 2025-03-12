@@ -60,9 +60,15 @@ stages:
                     ### NEED TO ADD FE### 2
                     ### FIX ETCD###
                     ### FIX KUBEAPI###
+                    ### SCRAPE METRICS FROM PODS###
                     ### KKUMA ALERTS###
                     ### PROM ALERTS###
                     ### GRAFANA ALERTS###
+                    ### KUB UPDATES###
+                    ### AUTOSCALE KEDA###
+                    ### ISTIO###
+                    ### GITOPS###
+
                     inlineScript: |
                       set -e  # Fail if any command fails
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
