@@ -75,7 +75,7 @@ variable "tags" {
     workloadtier = "infrastructure"
     customer = "ailevate"
     environment = "poc"
-    workload = "difyai"
+    workload = "difyaiab"
   }
 }
 

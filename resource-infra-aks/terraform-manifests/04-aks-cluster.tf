@@ -31,7 +31,8 @@ resource "azurerm_log_analytics_workspace" "insights" {
 }
 
 # Azure Kubernetes Cluster Block
-resource "azurerm_kubernetes_cluster" "aks-cluster" {
+# Get credentials with: az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
+resource "azurerm_kubernetes_cluster" "aks" {
   name                = local.aks_cluster_name   
   location            = local.location
   resource_group_name = var.rg_name

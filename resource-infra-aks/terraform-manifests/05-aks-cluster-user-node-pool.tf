@@ -17,7 +17,7 @@ locals {
 resource "azurerm_kubernetes_cluster_node_pool" "aksnp001" {
   zones    = var.aks_user_zones
   auto_scaling_enabled   = true
-  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks-cluster.id    
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id    
   max_count             = var.aks_user_maxnodes
   min_count             = var.aks_user_minnodes
   mode                  = "User"
