@@ -45,7 +45,7 @@ stages:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
-                    ### NEED TO ADD STANDARD TAGS TO ST### 1
+                    ### ENV AND WORKLOAD TAGS FROM PIPELINE ### 1
                     ### NEED TO ADD CONTAINER REGISTRY### 2
                     ### NEED TO TIE CONTAINER REGIRSTRY TO AKS### 4
                     ### NEED TO ADD PLAN### 2
@@ -68,9 +68,6 @@ stages:
                     ### AUTOSCALE KEDA###
                     ### ISTIO###
                     ### GITOPS###
-                    # CD
-                    # TAGS=$(awk '/    # BEGIN MANDATORY TAGS/{f=1;next} /    # END MANDATORY TAGS/{f=0} f' 02-variables.tf | sed 's/"//g' | sed 's/ = /=/g')
-                    # az tag create --resource-id $resource --tags Dept=Finance Status=Normal
                     inlineScript: |
                       set -e  # Fail if any command fails
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
@@ -79,8 +76,20 @@ stages:
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
                         echo "    Storage Account \"$AZURE_ST_NAME\" already exists."
                       else
+                        # Create Storage Account
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
+                        # Create Storage Container
                         az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode login
+                        # Code to Create Tags
+                        cd "$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)"
+                        # Get Storage Account ID
+                        AZURE_ST_ID=$(az storage account show --name $AZURE_ST_NAME | jq -r '.id')
+                        # Get Terraform Tags from variables.tf
+                        AZURE_MANDATORY_TAGS=$(awk '/    # BEGIN ST TAGS/{f=1;next} /    # END ST TAGS/{f=0} f' 02-variables.tf | sed 's/"//g' | sed 's/ = /=/g')
+                        # Add Tags with Pipeline Variables
+                        AZURE_MANDATORY_TAGS="${AZURE_MANDATORY_TAGS} environment=$LIFECYCLE_ENVIRONMENT workload=$AZURE_PROJECT_NAME"
+                        # Apply Tags to Storage Acccount
+                        az tag create --resource-id $AZURE_ST_ID --tags $AZURE_MANDATORY_TAGS
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""

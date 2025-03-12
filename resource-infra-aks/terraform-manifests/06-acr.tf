@@ -1,7 +1,7 @@
 # Locals Block
 locals {
-    # The location of the Azure Resource Group created for us should be the location for everything.
-    location = "${data.azurerm_resource_group.rg.location}"
+    # Location is defined in aks-cluster.tf
+    # location = "${data.azurerm_resource_group.rg.location}"
     container_registry_name = "cr${var.project_name}${var.environment}${local.location}${var.project_instance}"
 }
 

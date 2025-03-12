@@ -1,5 +1,17 @@
 # Input variables
 
+locals {
+  tags = {
+    # BEGIN ST TAGS
+    creator = "terraform"
+    workloadtier = "infrastructure"
+    customer = "ailevate"
+    # END ST TAGS
+    environment = var.environment
+    workload = var.project_name
+  }
+}
+
 # Variables that should be set before deployment.
 
 variable "log_retention_days" {
@@ -68,18 +80,19 @@ variable "aks_user_disksize" {
   type = number
 }
 
-variable "tags" {
-  type = map(string)
-  default = {
-    # BEGIN MANDATORY TAGS
-    creator = "terraform"
-    workloadtier = "infrastructure"
-    customer = "ailevate"
-    environment = "poc"
-    workload = "difyaiab"
-    # END MANDATORY TAGS
-  }
-}
+# Moved to locals
+#variable "tags" {
+#  type = map(string)
+#  default = {
+#    # BEGIN MANDATORY TAGS
+#    creator = "terraform"
+#    workloadtier = "infrastructure"
+#    customer = "ailevate"
+#    environment = "poc"
+#    workload = "difyaiab"
+#    # END MANDATORY TAGS
+#  }
+#}
 
 # Variables below will be sent and Terraform command line options.
 
