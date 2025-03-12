@@ -155,6 +155,70 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     allowTelemetryCollection: false
 
+  - stage: terraformPlan
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Terraform Plan'
+    trigger: manual
+    jobs:
+      - deployment: terraformPlan
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Terraform Plan'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: 'difyaiab-$(LIFECYCLE_ENVIRONMENT)-resource-infra-aks'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  # dispalyName: 'Checkout GitHub Repository'
+                # Azure CLI Login (Required for Terraform authentication)
+                - task: AzureCLI@2
+                  displayName: 'Azure CLI Login'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                - task: DownloadSecureFile@1
+                  displayName: 'Download SSH Key'
+                  name: sshkey
+                  inputs:
+                    secureFile: 'resource-infra-aks-linuxmaster-cert.pub'
+                - task: TerraformInstaller@1
+                  displayName: 'Terrafrom Installer'
+                  inputs:
+                    terraformVersion: 'latest'
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Init'
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-validate.tfstate'
+                    allowTelemetryCollection: false
+                - task: TerraformTaskV4@4
+                  inputs:
+                    command: 'plan'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
+                    commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var AZURE_PROJECT_INSTANCE=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath)'
+                    allowTelemetryCollection: false
+                  displayName: 'Terrafrom Plan'
+
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Backend Infrastructure Destruction'

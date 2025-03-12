@@ -98,34 +98,34 @@ variable "aks_user_disksize" {
 
 variable "rg_name" {
   description = "Resource Group Name"
-  # This variable already exists in the pipeline.  It can be sent as a Terraform command line option.
+  # This variable already exists in the pipeline as AZURE_RG_NAME.  It can be sent as a Terraform command line option.
   # default = ""
   type = string
 }
 
 variable "environment" {
   description = "Environment"
-  # This variable already exists in the pipeline.  It can be sent as a Terraform command line option.
+  # This variable already exists in the pipeline as LIFECYCLE_ENVIRONMENT.  It can be sent as a Terraform command line option.
   # default = ""
   type = string
 }
 
 variable "project_name" {
   description = "Project Name"
-  # This variable already exists in the pipeline.  It can be sent as a Terraform command line option.
+  # This variable already exists in the pipeline as AZURE_PROJECT_NAME.  It can be sent as a Terraform command line option.
   # default = ""
   type = string
 }
 
 variable "project_instance" {
   description = "Project Instance"
-  # This variable already exists in the pipeline.  It can be sent as a Terraform command line option.
+  # This variable already exists in the pipeline AZURE_PROJECT_INSTANCE.  It can be sent as a Terraform command line option.
   # default = ""
   type = string
 }
 
 # SSH Public Key for Linux VMs.
 variable "ssh_public_key" {
-  # This variable already exists in the pipeline.  It can be sent as a Terraform command line option.
+  # This variable already exists in the pipeline as sshkey.  It can be sent as a Terraform command line option.
   description = "This variable defines the SSH Public Key for Linux k8s Worker nodes"  
 }
