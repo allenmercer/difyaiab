@@ -155,14 +155,14 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     allowTelemetryCollection: false
 
-  - stage: terraformPlan
+  - stage: terraformApply
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
-    displayName: 'Terraform Plan'
+    displayName: 'Terraform Apply'
     trigger: manual
     jobs:
-      - deployment: terraformPlan
+      - deployment: terraformApply
         # The deployment displayName is displayed in ADO under Jobs.
-        displayName: 'Terraform Plan'
+        displayName: 'Terraform Apply'
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
