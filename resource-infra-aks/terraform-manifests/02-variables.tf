@@ -71,11 +71,13 @@ variable "aks_user_disksize" {
 variable "tags" {
   type = map(string)
   default = {
+    # BEGIN MANDATORY TAGS
     creator = "terraform"
     workloadtier = "infrastructure"
     customer = "ailevate"
     environment = "poc"
     workload = "difyaiab"
+    # END MANDATORY TAGS
   }
 }
 

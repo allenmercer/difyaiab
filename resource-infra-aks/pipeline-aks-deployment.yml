@@ -68,7 +68,9 @@ stages:
                     ### AUTOSCALE KEDA###
                     ### ISTIO###
                     ### GITOPS###
-
+                    # CD
+                    # TAGS=$(awk '/    # BEGIN MANDATORY TAGS/{f=1;next} /    # END MANDATORY TAGS/{f=0} f' 02-variables.tf | sed 's/"//g' | sed 's/ = /=/g')
+                    # az tag create --resource-id $resource --tags Dept=Finance Status=Normal
                     inlineScript: |
                       set -e  # Fail if any command fails
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
