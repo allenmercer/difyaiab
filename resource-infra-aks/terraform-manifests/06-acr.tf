@@ -13,7 +13,7 @@ resource "azurerm_container_registry" "cr" {
   location            = local.location
   sku                 = "Premium"
   admin_enabled       = true
-  tags = var.tags
+  tags = local.tags
 }
 
 # Azure Role Assignment Block for AKS to CR

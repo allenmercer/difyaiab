@@ -27,7 +27,7 @@ resource "azurerm_log_analytics_workspace" "insights" {
   resource_group_name = var.rg_name
   retention_in_days   = var.log_retention_days
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # Azure Kubernetes Cluster Block
@@ -51,7 +51,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     os_disk_size_gb         = var.aks_system_disksize
     type                    = "VirtualMachineScaleSets"
     node_labels = local.nodepool_system_labels
-    tags = var.tags
+    tags = local.tags
   }
 
   azure_policy_enabled = true
@@ -89,5 +89,5 @@ resource "azurerm_kubernetes_cluster" "aks" {
     load_balancer_sku = "standard"
   }
 
-  tags = var.tags
+  tags = local.tags
 }
