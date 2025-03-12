@@ -259,26 +259,6 @@ stages:
                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
                       az account show
                       echo "Azure login successful"
-                - task: AzureCLI@2
-                  # The step display name will be displayed in ADO in the DOS window in light green.
-                  displayName: 'Storage Account Deletion'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
-                      echo "Deleting Storage Account $AZURE_ST_NAME..."
-                      echo ""
-                      if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then
-                        az storage account delete --name $AZURE_ST_NAME -g "$(AZURE_RG_NAME)" --yes
-                        echo "    Storage Account \"$AZURE_ST_NAME\" deleted."
-                      else
-                        echo "    Storage Account \"$AZURE_ST_NAME\" does not exist."
-                      fi
-                      echo ""
-                      echo "Storage Account deletion complete"
                 - task: DownloadSecureFile@1
                   displayName: 'Download SSH Key'
                   name: sshkey
@@ -318,3 +298,23 @@ stages:
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
                     commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
                     allowTelemetryCollection: false
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Storage Account Deletion'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      echo "Deleting Storage Account $AZURE_ST_NAME..."
+                      echo ""
+                      if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then
+                        az storage account delete --name $AZURE_ST_NAME -g "$(AZURE_RG_NAME)" --yes
+                        echo "    Storage Account \"$AZURE_ST_NAME\" deleted."
+                      else
+                        echo "    Storage Account \"$AZURE_ST_NAME\" does not exist."
+                      fi
+                      echo ""
+                      echo "Storage Account deletion complete"
