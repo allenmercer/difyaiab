@@ -210,6 +210,7 @@ stages:
                     backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Plan'
                   inputs:
                     command: 'plan'
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
@@ -217,8 +218,8 @@ stages:
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
                     commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
-                  displayName: 'Terrafrom Plan'
                 - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Apply'
                   inputs:
                     command: 'apply'
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
@@ -226,7 +227,6 @@ stages:
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
                     commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
-                  displayName: 'Terrafrom Apply'
 
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
@@ -249,7 +249,7 @@ stages:
                   # The step display name will be displayed in ADO in the DOS window in light green.
                   displayName: 'Azure CLI Login'
                   inputs:
-                    azureSubscription: 'global-azdo-spn'
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
@@ -264,7 +264,7 @@ stages:
                   # The step display name will be displayed in ADO in the DOS window in light green.
                   displayName: 'Storage Account Deletion'
                   inputs:
-                    azureSubscription: 'global-azdo-spn'
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
@@ -280,3 +280,42 @@ stages:
                       fi
                       echo ""
                       echo "Storage Account deletion complete"
+                - task: DownloadSecureFile@1
+                  displayName: 'Download SSH Key'
+                  name: sshkey
+                  inputs:
+                    secureFile: 'resource-infra-aks-linuxmaster-cert.pub'
+                - task: TerraformInstaller@1
+                  displayName: 'Terrafrom Installer'
+                  inputs:
+                    terraformVersion: 'latest'
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Init'
+                  inputs:
+                    provider: 'azurerm'
+                    command: 'init'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmContainerName: 'tfstate'
+                    backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
+                    allowTelemetryCollection: false
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Plan Destroy'
+                  inputs:
+                    command: 'plan'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
+                    commandOptions: '-destroy -var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
+                    allowTelemetryCollection: false
+                - task: TerraformTaskV4@4
+                  displayName: 'Terrafrom Apply Destroy'
+                  inputs:
+                    command: 'apply'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
+                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
+                    allowTelemetryCollection: false
