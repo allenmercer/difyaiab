@@ -218,6 +218,15 @@ stages:
                     commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                   displayName: 'Terrafrom Plan'
+                - task: TerraformTaskV4@4
+                  inputs:
+                    command: 'apply'
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
+                    backendServiceArm: '$(AZURE_SERVICE_SPN)'
+                    environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
+                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
+                    allowTelemetryCollection: false
+                  displayName: 'Terrafrom Apply'
 
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
