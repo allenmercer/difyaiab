@@ -244,6 +244,9 @@ stages:
           runOnce:
             deploy:
               steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  # dispalyName: 'Checkout GitHub Repository'
                 # Azure CLI Login Step.
                 - task: AzureCLI@2
                   # The step display name will be displayed in ADO in the DOS window in light green.
