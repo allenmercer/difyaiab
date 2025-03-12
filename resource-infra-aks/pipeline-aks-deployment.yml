@@ -131,11 +131,9 @@ stages:
                       az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
                       az account show
-                      # Debug Commands
-                      # pwd
-                      # echo '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
-                      # ls
                       echo "Azure login successful"
+                      # Get resource group location for terraform commands.
+                      AZURE_RG_LOCATION=$(az group show --name $AZURE_RG_NAME | jq -r '.location')
                 - task: TerraformInstaller@1
                   displayName: 'Terrafrom Installer'
                   inputs:
@@ -148,7 +146,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)${AZURE_RG_LOCATION}$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
                     backendAzureRmKey: 'aks-validate.tfstate'
                     allowTelemetryCollection: false
@@ -263,7 +261,6 @@ stages:
                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
                       az account show
                       echo "Azure login successful"
-                # Show Logged In User.
                 - task: AzureCLI@2
                   # The step display name will be displayed in ADO in the DOS window in light green.
                   displayName: 'Storage Account Deletion'
