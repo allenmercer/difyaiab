@@ -58,6 +58,11 @@ stages:
                     ### NEED TO ADD BE#### 8
                     ### NEED TO ADD BE### 2
                     ### NEED TO ADD FE### 2
+                    ### FIX ETCD###
+                    ### FIX KUBEAPI###
+                    ### KKUMA ALERTS###
+                    ### PROM ALERTS###
+                    ### GRAFANA ALERTS###
                     inlineScript: |
                       set -e  # Fail if any command fails
                       AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
