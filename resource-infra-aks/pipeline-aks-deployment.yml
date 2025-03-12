@@ -80,6 +80,8 @@ stages:
                         az storage account create --resource-group "$(AZURE_RG_NAME)" --name $AZURE_ST_NAME --sku Standard_LRS --encryption-services blob
                         # Create Storage Container
                         az storage container create --name tfstate --account-name $AZURE_ST_NAME --auth-mode login
+                        pwd
+                        ls
                         # Code to Create Tags
                         cd "$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)"
                         # Get Storage Account ID
