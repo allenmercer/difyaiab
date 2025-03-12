@@ -103,6 +103,13 @@ variable "rg_name" {
   type = string
 }
 
+variable "location" {
+  description = "Location"
+  # This variable already exists in the pipeline as AZURE_RG_NAME.  It can be sent as a Terraform command line option.
+  # default = ""
+  type = string
+}
+
 variable "environment" {
   description = "Environment"
   # This variable already exists in the pipeline as LIFECYCLE_ENVIRONMENT.  It can be sent as a Terraform command line option.

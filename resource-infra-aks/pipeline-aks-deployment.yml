@@ -73,8 +73,7 @@ stages:
                     ### GITOPS###
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      AZURE_RG_LOCATION=$(az group show --name $AZURE_RG_NAME | jq -r '.location')
-                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)${AZURE_RG_LOCATION}$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       echo "Creating Storage Account $AZURE_ST_NAME..."
                       echo ""
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
@@ -133,7 +132,6 @@ stages:
                       az account show
                       echo "Azure login successful"
                       # Get resource group location for terraform commands.
-                      AZURE_RG_LOCATION=$(az group show --name $AZURE_RG_NAME | jq -r '.location')
                 - task: TerraformInstaller@1
                   displayName: 'Terrafrom Installer'
                   inputs:
@@ -146,7 +144,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)${AZURE_RG_LOCATION}$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
                     backendAzureRmKey: 'aks-validate.tfstate'
                     allowTelemetryCollection: false
@@ -207,7 +205,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
                     backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
                     allowTelemetryCollection: false
@@ -218,7 +216,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
+                    commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Apply'
@@ -298,7 +296,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
                     backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
                     allowTelemetryCollection: false
@@ -309,7 +307,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '-destroy -var rg_name=$(AZURE_RG_NAME) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
+                    commandOptions: '-destroy -var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Apply Destroy'

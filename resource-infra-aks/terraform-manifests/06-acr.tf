@@ -1,8 +1,6 @@
 # Locals Block
 locals {
-    # Location is defined in aks-cluster.tf
-    # location = "${data.azurerm_resource_group.rg.location}"
-    container_registry_name = "cr${var.project_name}${var.environment}${local.location}${var.project_instance}"
+    container_registry_name = "cr${var.project_name}${var.environment}${var.location}${var.project_instance}"
 }
 
 # Azure Container Registry Block
@@ -10,7 +8,7 @@ locals {
 resource "azurerm_container_registry" "cr" {
   name                = local.container_registry_name
   resource_group_name = var.rg_name
-  location            = local.location
+  location            = var.location
   sku                 = "Premium"
   admin_enabled       = true
   tags = local.tags

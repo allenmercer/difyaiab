@@ -1,6 +1,5 @@
 # Locals Block
 locals {
-    # The location of the Azure Resource Group created for us should be the location for everything.
     nodepool_user_name = "npuser"
     nodepool_user_labels = {
       "nodepool-type" = "user"
