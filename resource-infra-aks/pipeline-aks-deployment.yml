@@ -73,7 +73,8 @@ stages:
                     ### GITOPS###
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_RG_LOCATION=$(az group show --name $AZURE_RG_NAME | jq -r '.location')
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)${AZURE_RG_LOCATION}$(AZURE_PROJECT_INSTANCE)"
                       echo "Creating Storage Account $AZURE_ST_NAME..."
                       echo ""
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
