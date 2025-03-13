@@ -47,3 +47,9 @@ Then save the pipeline.
 Under "Get sources" you can choose your branch and repo and other cool stuff.
 Under Triggers, add you triggers for CI and Pull Requests.
 Save again.
+
+Modify resource-infra-aks/terraform-manifests/02-variables.tf with your custom variables for the resources.
+In the "locals tags" section, leave the "# BEGIN ST TAGS" and "# END ST TAGS" comments in place.
+These comments are used by the pipeline to pull tags when creating the Storage Account.
+The tags below the "# END ST TAGS" are also added to the Storage Account, however the Pipeline already has the values.
+Note that the variables at the bottom of the file have no "default" values.  They are injected into the Terraform command in the Pipeline.
