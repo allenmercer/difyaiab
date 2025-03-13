@@ -30,7 +30,7 @@ stages:
                   # The step display name will be displayed in ADO in the DOS window in light green.
                   displayName: 'Azure CLI Login'
                   inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    azureSubscription: 'global_azdo_dev'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
