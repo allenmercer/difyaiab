@@ -33,7 +33,7 @@ AZURE_PROJECT_INSTANCE  001                                         Unique insta
 ADO_POC_ENVIRONMENT     poc                                         POC lifecycle environment name.
 ADO_DEV_ENVIRONMENT     dev                                         DEV lifecycle environment name.
 ADO_PROD_ENVIRONMENT    prod                                        PROD lifecycle environment name.
-AZURE_SERVICE_SPN     global-azdo-spn                             Found under Azure Enterprise Applications
+AZURE_SERVICE_SPN     global-azdo-spn                               Found under Azure Enterprise Applications and App registrations.
 REPO_TF_MANIFEST_FOLDER resource-infra-aks/terraform-manifests      Location of the Terraform files in the repo.
 
 Create a new Pipeline in ADO.
