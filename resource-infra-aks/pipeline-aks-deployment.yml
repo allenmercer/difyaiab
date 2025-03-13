@@ -138,6 +138,7 @@ stages:
                     terraformVersion: 'latest'
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Init'
+                  retryCountOnTaskFailure: 3
                   inputs:
                     provider: 'azurerm'
                     command: 'init'
