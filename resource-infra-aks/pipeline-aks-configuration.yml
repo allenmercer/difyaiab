@@ -56,11 +56,11 @@ stages:
                     inlineScript: |
                       set -e  # Fail if any command fails
                       echo "Installing Traefik..."
-
-                      cd resource-infra-aks/kubernetes-manifests/traefik
+                      cd $(REPO_KUBMANIFEST_FOLDER)/traefik
                       kubectl apply -f traefik01-ns.yaml
                       kubectl apply -f traefik02-crd.yaml
                       kubectl apply -f traefik03-crd-rbac.yaml
+
                       # Add helm upgrade --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
                       kubectl get deployments.apps -n traefik | grep traefik || helm repo add traefik https://traefik.github.io/charts
                       kubectl get deployments.apps -n traefik | grep traefik || helm repo update
