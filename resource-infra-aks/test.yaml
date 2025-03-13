@@ -1,0 +1,43 @@
+trigger: none
+pr: none
+
+name: tf-$(Date:yyMMdd)$(Rev:.r)
+
+parameters:
+  - name: arm_connection
+    displayName: Azure Subscription
+    values:
+      - global_azdo_dev
+    default: global_azdo_dev
+
+  - name: environment
+    displayName: Environment
+    values:
+      - dev
+    default: dev
+
+variables:
+  - name: foo
+    value: bar
+
+stages:
+  - stage: Terraform
+    jobs:
+      - job: Terraform
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            fetchTags: false
+
+          - task: AzurePowerShell@5
+            displayName: Fetch Sub ID
+            inputs:
+              azureSubscription: ${{ parameters.arm_connection }}
+              ScriptType: InlineScript
+              Inline: |
+                $sub = (Get-AzContext).Subscription.Id
+                Write-Host "##vso[task.setvariable variable=subscription_id;]$sub"
+              azurePowerShellVersion: LatestVersion
+            retryCountOnTaskFailure: 3
