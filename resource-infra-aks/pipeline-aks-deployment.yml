@@ -9,7 +9,7 @@ stages:
   - stage: terraformBackendStorageDeployment
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Backend Storage Deployment'
-    trigger: manual
+    #trigger: manual
     jobs:
       - deployment: terraformBackendStorageDeployment
         # The deployment displayName is displayed in ADO under Jobs.
@@ -101,7 +101,7 @@ stages:
   - stage: terraformCodeValidation
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Code Validation'
-    trigger: manual
+    #trigger: manual
     jobs:
       - deployment: terraformCodeValidation
         # The deployment displayName is displayed in ADO under Jobs.
@@ -158,7 +158,7 @@ stages:
   - stage: terraformApply
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Apply'
-    trigger: manual
+    #trigger: manual
     jobs:
       - deployment: terraformApply
         # The deployment displayName is displayed in ADO under Jobs.
