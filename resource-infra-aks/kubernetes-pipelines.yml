@@ -25,10 +25,10 @@ stages:
                 # Checkout GitHub Repository
                 - checkout: self
                   # dispalyName: 'Checkout GitHub Repository'
-                # Azure CLI Login Step.
+                # Azure Resource Login Step.
                 - task: AzureCLI@2
                   # The step display name will be displayed in ADO in the DOS window in light green.
-                  displayName: 'Azure CLI Login'
+                  displayName: 'Azure Resource Login'
                   inputs:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
@@ -40,45 +40,20 @@ stages:
                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
                       az account show
                       echo "Azure login successful"
-
-                # Traefik Install Step
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
+                      cat /home/vsts/.kube/config
+                      echo "Kubernetes credential setup successful"
+                # Test Step
                 - task: AzureCLI@2
-                  displayName: 'Install Traefik'
+                  displayName: 'Test'
                   inputs:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      echo ""
-                      echo "Logging into Azure..."
-                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
-                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
-                      az account show
-                      echo ""
-                      echo "Setting up Kubernetes credentials..."
-                      az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
-                      cat /home/vsts/.kube/config
-                      echo ""
-                      #echo "Logging into Azure Container Registry..."
-                      #docker login https://crdifyaipoc001.azurecr.io -u $(az acr credential show -n crdifyaipoc001 | jq -r '.username') -p $(az acr credential show -n crdifyaipoc001 | jq -r '.passwords[0]|.value')
-                      #echo "List Files"
-                      #pwd
-                      #ls
-                      echo ""
-                      echo "Installing Traefik..."
-                      cd resource-infra-aks/kubernetes-manifests/traefik
-                      kubectl apply -f traefik01-ns.yaml
-                      kubectl apply -f traefik02-crd.yaml
-                      kubectl apply -f traefik03-crd-rbac.yaml
-                      # Add helm upgrade --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
-                      kubectl get deployments.apps -n traefik | grep traefik || helm repo add traefik https://traefik.github.io/charts
-                      kubectl get deployments.apps -n traefik | grep traefik || helm repo update
-                      kubectl get deployments.apps -n traefik | grep traefik || helm install --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
-                      traefik_ip=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                      az network dns record-set a list --resource-group difyai-agent-builder-poc --zone-name aidifypoc.com | grep ipv4Address
-                      kubectl apply -f traefik06-dashboard-secret.yaml
-                      kubectl apply -f traefik07-dashboard-middleware.yaml
-                      kubectl apply -f traefik08-dashboard-rule.yaml
-                      echo ""
-                      echo "Stage Successful"
+                      kubectl get pods -n kube-system
+                      az group list
