@@ -9,7 +9,7 @@ stages:
   - stage: configureAKSCluster
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Configure AKS Cluster'
-    trigger: manual
+    #trigger: manual
     jobs:
       - deployment: configureAKSCluster
         # The deployment displayName is displayed in ADO under Jobs.
