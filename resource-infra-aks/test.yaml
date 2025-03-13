@@ -31,6 +31,14 @@ stages:
             fetchDepth: 1
             fetchTags: false
 
+          - task: AzureCLI@2
+            displayName: Allen
+            inputs:
+              azureSubscription: ${{ parameters.arm_connection }}
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: 'pwd'
+
           - task: AzurePowerShell@5
             displayName: Fetch Sub ID
             inputs:
