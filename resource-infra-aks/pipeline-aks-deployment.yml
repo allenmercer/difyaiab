@@ -30,13 +30,12 @@ stages:
                   # The step display name will be displayed in ADO in the DOS window in light green.
                   displayName: 'Azure CLI Login'
                   inputs:
-                    #azureSubscription: 'global_azdo_production'
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
                       echo "Logging into Azure..."
-                      echo "AZURE SERVICE SPN: $(AZURE_SERVICE_SPN)"
                       az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
                       az account show
