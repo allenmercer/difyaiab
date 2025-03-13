@@ -46,14 +46,29 @@ stages:
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
-                # Test Step
+                # Install Traefik Step
                 - task: AzureCLI@2
-                  displayName: 'Test'
+                  displayName: 'Install Traefik'
                   inputs:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      kubectl get pods -n kube-system
-                      az group list
+                      echo "Installing Traefik..."
+
+                      cd resource-infra-aks/kubernetes-manifests/traefik
+                      kubectl apply -f traefik01-ns.yaml
+                      kubectl apply -f traefik02-crd.yaml
+                      kubectl apply -f traefik03-crd-rbac.yaml
+                      # Add helm upgrade --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
+                      kubectl get deployments.apps -n traefik | grep traefik || helm repo add traefik https://traefik.github.io/charts
+                      kubectl get deployments.apps -n traefik | grep traefik || helm repo update
+                      kubectl get deployments.apps -n traefik | grep traefik || helm install --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
+                      traefik_ip=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      az network dns record-set a list --resource-group difyai-agent-builder-poc --zone-name aidifypoc.com | grep ipv4Address
+                      kubectl apply -f traefik06-dashboard-secret.yaml
+                      kubectl apply -f traefik07-dashboard-middleware.yaml
+                      kubectl apply -f traefik08-dashboard-rule.yaml
+                      echo ""
+                      echo "Stage Successful"
