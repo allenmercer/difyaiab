@@ -60,7 +60,9 @@ stages:
                       kubectl apply -f traefik01-ns.yaml
                       kubectl apply -f traefik02-crd.yaml
                       kubectl apply -f traefik03-crd-rbac.yaml
-
+                      kubectl apply -f traefik04-dashboard-secret.yaml
+                      kubectl apply -f traefik05-dashboard-middleware.yaml
+                      helm upgrade --install --version
                       # Add helm upgrade --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
                       kubectl get deployments.apps -n traefik | grep traefik || helm repo add traefik https://traefik.github.io/charts
                       kubectl get deployments.apps -n traefik | grep traefik || helm repo update
