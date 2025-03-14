@@ -1,0 +1,153 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Define Variables
+variables:
+  - group: arm-variables
+  - name: POC_ENVIRONMENT
+    value: poc
+  - name: APP_NAME
+    value: service-ai-agents
+
+stages:
+  - stage: buildAndPushDockerImage
+    displayName: 'Build and Push Docker Image'
+    trigger: manual
+    jobs:
+      - deployment: buildAndPushDockerImage
+        displayName: 'Build and Push Docker Image'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(POC_ENVIRONMENT)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Must reclone repo.
+                - checkout: self
+
+                # Login to all services
+                - task: AzureCLI@2
+                  inputs:
+                    #azureSubscription: 'AZRM_difyai-agent-builder-poc_Service_Connection'
+                    azureSubscription: 'global_azdo_dev'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo ""
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      az aks get-credentials --admin --name aks-difyaiab-dev-eastus2-001 --resource-group difyai-agent-builder-poc
+                      cat /home/vsts/.kube/config
+                      echo ""
+                      echo "Logging into Azure Container Registry..."
+                      docker login crdifyaiabdeveastus2001.azurecr.io -u $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.username') -p $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.passwords[0]|.value')
+                      echo "List Files"
+                      pwd
+                      ls
+                      echo ""
+                      echo "Building docker image and pushing to registry..."
+                      cd service-ai-agents
+                      docker build -t difyaiab-be .
+                      echo ""
+                      echo "List docker images and build number..."
+                      docker image ls
+                      echo $(Build.BuildId)
+                      echo ""
+                      echo "Running docker image..."
+                      docker run -d -p 8080:8000 \
+                      -e LLM_API_KEY=6ccab1fbe41d4194b7bde6d99fb05965 \
+                      -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
+                      -e LLM_MODEL=gpt-4o \
+                      -e LLM_API_VERSION=2024-10-21 \
+                      -e DIFY_BACKEND=http://135.232.106.156 \
+                      difyaiab-be
+                      #docker run -d -p 8080:8000 service-ai-agents
+                      echo ""
+                      echo "Testing docker image..."
+                      sleep 5
+                      docker container ls
+                      curl http://localhost:8080
+                      curl -s  http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      echo ""
+                      echo "Stopping docker image..."
+                      docker container ls
+                      docker container rm $(docker container ls | grep difyaiab-be | awk '{print $1}') --force
+                      echo ""
+                      echo "Tagging docker image..."
+                      docker tag difyaiab-be crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be:1.1.$(Build.BuildId)
+                      docker tag difyaiab-be crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be:latest
+                      echo ""
+                      echo "Pushing docker image..."
+                      docker push --all-tags crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be
+                      echo ""
+                      echo "Stage Successful"
+                  displayName: 'Build and Push Docker Image'
+
+  - stage: pullandDeploy
+    displayName: 'Pull and Deploy Docker Image'
+    trigger: manual
+    jobs:
+      - deployment: pullandDeploy
+        displayName: 'Pull and Deploy Docker Image'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(POC_ENVIRONMENT)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Must reclone repo.
+                - checkout: self
+
+                # Login to all services
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: 'global_azdo_dev'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo ""
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      #echo "" > /home/vsts/.kube/config
+                      az aks get-credentials --admin --name aks-difyaiab-dev-eastus2-001 --resource-group difyai-agent-builder-poc
+                      echo ""
+                      echo "Kube Config File"
+                      cat /home/vsts/.kube/config
+                      echo ""
+                      echo "Contexts"
+                      kubectl config get-contexts
+                      echo ""
+                      echo "Logging into Azure Container Registry..."
+                      docker login https://crdifyaiabdeveastus2001.azurecr.io -u $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.username') -p $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.passwords[0]|.value')
+                      echo "List Files"
+                      pwd
+                      ls -al
+                      #ls -al work
+                      cd service-ai-agents
+                      echo ""
+                      echo "Get kubernetes namespaces..."
+                      #kubectl get ns
+                      echo ""
+                      echo "Deploy kubernetes pod..."
+                      kubectl apply -f deployment.yaml
+                      echo ""
+                      echo "Get service ip..."
+                      kubectl get service -n difyaiab
+                      echo ""
+                      echo "Stage Successful"
+                  displayName: 'Pull and Deploy Docker Image'

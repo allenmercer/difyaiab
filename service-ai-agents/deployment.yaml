@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: difyaiab
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-difyaiab-be
+  namespace: difyaiab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: difyaiab-be
+  template:
+    metadata:
+      labels:
+        app: difyaiab-be
+    spec:
+      containers:
+        - name: difyaiab-be
+          image: crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-be:latest
+          env:
+            - name: LLM_API_KEY
+              value: '6ccab1fbe41d4194b7bde6d99fb05965'
+            - name: LLM_URL
+              value: 'https://ank-ai-dev.openai.azure.com/'
+            - name: LLM_MODEL
+              value: 'gpt-4o'
+            - name: LLM_API_VERSION
+              value: '2024-10-21'
+            - name: DIFY_BACKEND
+              value: 'http://135.232.106.156'
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '256Mi'
+          ports:
+            - containerPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-difyaiab-be
+  namespace: difyaiab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deployment-difyaiab-be
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-lb-difyaiab-be
+  namespace: difyaiab
+spec:
+  selector:
+    app: difyaiab-be
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-cip-difyaiab-be
+  namespace: difyaiab
+spec:
+  selector:
+    app: difyaiab-be
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
