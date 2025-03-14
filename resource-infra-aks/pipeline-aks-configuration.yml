@@ -70,5 +70,10 @@ stages:
                       helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
                       # Get Traefik
                       TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      until [[ $TRAEFIK_IP != "<pending>" ]]; do
+                        echo "    Waiting for traefik ip..."
+                        sleep 2
+                        TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      done
                       echo "    Traefik IP: $TRAEFIK_IP"
                       echo "Traefik install successful"
