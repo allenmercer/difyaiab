@@ -77,3 +77,32 @@ stages:
                       done
                       echo "    Traefik IP: $TRAEFIK_IP"
                       echo "Traefik install successful"
+
+                # Install Kube Prometheus Stack Step
+                - task: AzureCLI@2
+                  displayName: 'Install Kube Prometheus Stack'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Installing Kube Prometheus Stack..."
+                      # Install Kube Prometheus Stack Manifests
+                      cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
+                      # kubectl apply -f some_file.yaml
+                      # Install Kube Prometheus Stack Helm Chart
+                      helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                      helm repo update
+
+                      # helm search repo traefik/traefik --versions
+                      helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
+                      # Get Traefik
+                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      until [[ $TRAEFIK_IP != "<pending>" ]]; do
+                        echo "    Waiting for traefik ip..."
+                        sleep 2
+                        TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      done
+                      echo "    Traefik IP: $TRAEFIK_IP"
+                      echo "Traefik install successful"
