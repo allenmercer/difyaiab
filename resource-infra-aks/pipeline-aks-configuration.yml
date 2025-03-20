@@ -92,15 +92,7 @@ stages:
                       # Install Kube Prometheus Stack Helm Chart
                       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
                       helm repo update
-
-                      # helm search repo traefik/traefik --versions
-                      helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
-                      # Get Traefik
-                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                      until [[ $TRAEFIK_IP != "<pending>" ]]; do
-                        echo "    Waiting for traefik ip..."
-                        sleep 2
-                        TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                      done
-                      echo "    Traefik IP: $TRAEFIK_IP"
-                      echo "Traefik install successful"
+                      # helm search repo prometheus-community/kube-prometheus-stack --versions
+                      # helm -n monitoring get values prometheus
+                      helm upgrade --install --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
+                      echo "Kube Prometheus Stack install successful"
