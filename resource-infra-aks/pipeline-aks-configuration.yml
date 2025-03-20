@@ -97,7 +97,7 @@ stages:
                       helm repo update
                       # helm search repo prometheus-community/kube-prometheus-stack --versions
                       # helm -n monitoring get values prometheus
-                      helm upgrade --install --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
+                      helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
                       echo "Kube Prometheus Stack install successful"
 
 ############################################################
