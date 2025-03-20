@@ -43,7 +43,7 @@ stages:
                       echo "Azure login successful"
                       echo ""
                       echo "Setting up Kubernetes credentials..."
-                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(LIFECYCLE_ENVIRONMENT)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
