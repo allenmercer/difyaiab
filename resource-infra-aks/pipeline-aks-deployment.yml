@@ -1,10 +1,10 @@
 # Define Variables
 variables:
-  - group: difyaiab-global-resource-infra-aks
-  - name: LIFECYCLE_ENVIRONMENT
-    value: '$(ADO_DEV_ENVIRONMENT)'
+  - group: adovg-difyaiab-dev-eastus2-001
 
-# Stage to Deploy Terraform Backend Storage
+############################################################
+### Stage to Deploy Terraform Backend Storage            ###
+############################################################
 stages:
   - stage: terraformBackendStorageDeployment
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
@@ -17,7 +17,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
-        environment: difyaiab-global-resource-infra-aks
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
         strategy:
           runOnce:
             deploy:
@@ -90,14 +90,20 @@ stages:
                         # Get Terraform Tags from variables.tf
                         AZURE_MANDATORY_TAGS=$(awk '/    # BEGIN ST TAGS/{f=1;next} /    # END ST TAGS/{f=0} f' 02-variables.tf | sed 's/"//g' | sed 's/ = /=/g')
                         # Add Tags with Pipeline Variables
-                        AZURE_MANDATORY_TAGS="${AZURE_MANDATORY_TAGS} environment=$LIFECYCLE_ENVIRONMENT workload=$AZURE_PROJECT_NAME"
+                        AZURE_MANDATORY_TAGS="${AZURE_MANDATORY_TAGS} environment=$AZURE_PROJECT_LE workload=$AZURE_PROJECT_NAME"
                         # Apply Tags to Storage Acccount
                         az tag create --resource-id $AZURE_ST_ID --tags $AZURE_MANDATORY_TAGS
                         echo "    Storage Account \"$AZURE_ST_NAME\" and Container \"tfstate\" created."
                       fi
                       echo ""
                       echo "Storage Account creation complete"
+  ############################################################
+  ### END Stage to Deploy Terraform Backend Storage        ###
+  ############################################################
 
+  ############################################################
+  ### Stage for Terriform Code Validation                  ###
+  ############################################################
   - stage: terraformCodeValidation
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Code Validation'
@@ -109,7 +115,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
-        environment: 'difyaiab-$(LIFECYCLE_ENVIRONMENT)-resource-infra-aks'
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
         strategy:
           runOnce:
             deploy:
@@ -155,7 +161,13 @@ stages:
                     command: 'validate'
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     allowTelemetryCollection: false
+  ############################################################
+  ### END Stage for Terriform Code Validation                  ###
+  ############################################################
 
+  ############################################################
+  ### Stage for Terriform Apply                            ###
+  ############################################################
   - stage: terraformApply
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Apply'
@@ -167,7 +179,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
-        environment: 'difyaiab-$(LIFECYCLE_ENVIRONMENT)-resource-infra-aks'
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
         strategy:
           runOnce:
             deploy:
@@ -209,7 +221,7 @@ stages:
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
                     backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
+                    backendAzureRmKey: 'aks-$(AZURE_PROJECT_LE).tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Plan'
@@ -218,7 +230,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
+                    commandOptions: '-var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(AZURE_PROJECT_LE) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(AZURE_PROJECT_LE)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Apply'
@@ -227,9 +239,15 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-create-$(Build.BuildId).out'
+                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(AZURE_PROJECT_LE)-create-$(Build.BuildId).out'
                     allowTelemetryCollection: false
+  ############################################################
+  ### END Stage for Terriform Apply                        ###
+  ############################################################
 
+  ############################################################
+  ### Stage for Backend Destruction                        ###
+  ############################################################
   - stage: backendInfrastructureDestruction
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Backend Infrastructure Destruction'
@@ -241,7 +259,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         # This is the environment in ADO where the results of this job will be displayed.
-        environment: difyaiab-global-resource-infra-aks
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
         strategy:
           runOnce:
             deploy:
@@ -284,7 +302,7 @@ stages:
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
                     backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-$(LIFECYCLE_ENVIRONMENT).tfstate'
+                    backendAzureRmKey: 'aks-$(AZURE_PROJECT_LE).tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Plan Destroy'
@@ -293,7 +311,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '-destroy -var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(LIFECYCLE_ENVIRONMENT) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
+                    commandOptions: '-destroy -var rg_name=$(AZURE_RG_NAME) -var location=$(AZURE_RG_LOCATION) -var environment=$(AZURE_PROJECT_LE) -var project_name=$(AZURE_PROJECT_NAME) -var project_instance=$(AZURE_PROJECT_INSTANCE) -var ssh_public_key=$(sshkey.secureFilePath) -out $(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(AZURE_PROJECT_LE)-destroy-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Apply Destroy'
@@ -302,7 +320,7 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     environmentServiceNameAzureRM: '$(AZURE_SERVICE_SPN)'
-                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(LIFECYCLE_ENVIRONMENT)-destroy-$(Build.BuildId).out'
+                    commandOptions: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)/$(AZURE_PROJECT_LE)-destroy-$(Build.BuildId).out'
                     allowTelemetryCollection: false
                 - task: AzureCLI@2
                   # The step display name will be displayed in ADO in the DOS window in light green.
@@ -324,3 +342,7 @@ stages:
                       fi
                       echo ""
                       echo "Storage Account deletion complete"
+
+############################################################
+### END Stage for Backend Destruction                    ###
+############################################################
