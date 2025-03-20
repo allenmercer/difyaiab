@@ -2,10 +2,10 @@
 variables:
   - group: adovg-difyaiab-dev-eastus2-001
 
-############################################################
-### Stage to Deploy Terraform Backend Storage            ###
-############################################################
 stages:
+  ############################################################
+  ### Stage to Deploy Terraform Backend Storage            ###
+  ############################################################
   - stage: terraformBackendStorageDeployment
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Terraform Backend Storage Deployment'

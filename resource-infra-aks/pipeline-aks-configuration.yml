@@ -4,6 +4,9 @@ variables:
 
 # Stage to Configure AKS Cluster
 stages:
+  ############################################################
+  ### Stage to Configure AKS Cluster                       ###
+  ############################################################
   - stage: configureAKSCluster
     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
     displayName: 'Configure AKS Cluster'
@@ -96,3 +99,7 @@ stages:
                       # helm -n monitoring get values prometheus
                       helm upgrade --install --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
                       echo "Kube Prometheus Stack install successful"
+
+############################################################
+### END Stage to Configure AKS Cluster                   ###
+############################################################
