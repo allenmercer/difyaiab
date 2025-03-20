@@ -1,0 +1,31 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: middleware-nginx-hello-stripprefix
+  namespace: nginx-hello
+spec:
+  stripPrefix:
+    prefixes:
+      - '/nginx-hello'
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ingress-nginx-hello
+  namespace: nginx-hello
+
+spec:
+  entryPoints:
+    - websecure
+
+  routes:
+    - match: PathPrefix(`/nginx-hello`)
+      kind: Rule
+      middlewares:
+        - name: middleware-nginx-hello-stripprefix
+          namespace: nginx-hello
+      services:
+        - name: service-cip-nginx-hello
+          port: 80
+          namespace: nginx-hello

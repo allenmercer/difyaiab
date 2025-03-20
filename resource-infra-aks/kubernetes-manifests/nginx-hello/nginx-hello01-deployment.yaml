@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-hello
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-nginx-hello
+  namespace: nginx-hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-hello
+  template:
+    metadata:
+      labels:
+        app: nginx-hello
+    spec:
+      containers:
+        - name: nginx-hello
+          image: nginxdemos/hello:latest
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '256Mi'
+          ports:
+            - containerPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-nginx-hello
+  namespace: nginx-hello
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deployment-nginx-hello
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-cip-nginx-hello
+  namespace: nginx-hello
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 80
+      port: 80
+  selector:
+    app: nginx-hello
+#  sessionAffinity: ClientIP
+#  sessionAffinityConfig:
+#    clientIP:
+#      timeoutSeconds: 600
