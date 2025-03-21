@@ -195,12 +195,8 @@ stages:
                       set -e  # Fail if any command fails
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
-                      pwd
-                      ls
-                      echo $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      ls $(REPO_SVCINFRAWHOAMI_FOLDER)
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      echo "    BuildID: $(Build.BuildId)
+                      echo "    BuildID: $(Build.BuildId)"
                       echo $(Build.BuildId) > ado_build_version.txt
                       echo "  Connecting AKS Cluster to Container Registry"
                       AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
