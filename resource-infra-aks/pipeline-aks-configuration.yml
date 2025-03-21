@@ -115,6 +115,74 @@ stages:
                       kubectl apply -f nginx-hello01-deployment.yaml
                       kubectl apply -f nginx-hello02-ingress.yaml
                       echo "nginx-hello deployment successful"
+  ############################################################
+  ### END Stage to Configure AKS Cluster                   ###
+  ############################################################
+
+  ############################################################
+  ### Stage to Test AKS Cluster                            ###
+  ############################################################
+  - stage: ctestAKSCluster
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Test AKS Cluster'
+    #trigger: manual
+    jobs:
+      - deployment: testAKSCluster
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Test AKS Cluster'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  # dispalyName: 'Checkout GitHub Repository'
+                # Azure Resource Login Step.
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Azure Resource Login'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
+                      cat /home/vsts/.kube/config
+                      echo "Kubernetes credential setup successful"
+                # Test hello-world Ingress Step
+                # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
+                # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
+                - task: AzureCLI@2
+                  displayName: 'Test hello-world Ingress'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Testing hello-world ingress..."
+                      # Test hello-world Ingress
+                      TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
+                      NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
+                      if [ $NGINX_HELLO_RSC == "401" ]; then
+                        echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
+                      else
+                        echo "    ERROR: nginx-hello is not responding."
+                        exit 1
+                      fi
 
 ############################################################
 ### END Stage to Configure AKS Cluster                   ###
