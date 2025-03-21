@@ -197,6 +197,8 @@ stages:
                       # Test Build Push Pull and Deploy
                       pwd
                       ls
+                      echo $(REPO_SVCINFRAWHOAMI_FOLDER)
+                      ls $(REPO_SVCINFRAWHOAMI_FOLDER)
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
                       echo "    BuildID: $(Build.BuildId)
                       echo $(Build.BuildId) > ado_build_version.txt
