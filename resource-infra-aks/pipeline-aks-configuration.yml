@@ -196,16 +196,49 @@ stages:
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      echo "    BuildID: $(Build.BuildId)"
-                      echo $(Build.BuildId) > ado_build_version.txt
-                      echo "  Connecting AKS Cluster to Container Registry"
+                      echo ""
+                      echo "Connecting AKS Cluster to Container Registry"
                       AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
                       CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                      echo "        AKS Cluster Name: $AKS_CLUSTER_NAME"
-                      echo "        Container Registry Name: $CONTAINER_REGISTRY_NAME"
-                      echo "        Azure Resource Group: $(AZURE_RG_NAME)"
+                      echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
+                      echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
+                      echo "    Azure Resource Group: $(AZURE_RG_NAME)"
                       az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
-                      echo " Connection between AKS Cluster and Container Registry successful"
+                      echo "Connection between AKS Cluster and Container Registry successful"
+                      echo ""
+                      echo "    BuildID: $(Build.BuildId)"
+                      echo $(Build.BuildId) > ado_build_version.txt
+
+                      # echo ""
+                      # echo "Building docker image and pushing to registry..."
+                      # cd service-infra-whoami
+                      # docker build -t service-infra-whoami .
+                      # echo ""
+                      # echo "List docker images and build number..."
+                      # docker image ls
+                      # echo $(Build.BuildId)
+                      # echo ""
+                      # echo "Running docker image..."
+                      # docker run -d -p 8080:80 service-infra-whoami
+                      # echo ""
+                      # echo "Testing docker image..."
+                      # sleep 5
+                      # docker container ls
+                      # curl http://localhost:8080
+                      # curl -s  http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      # echo ""
+                      # echo "Stopping docker image..."
+                      # docker container ls
+                      # docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
+                      # echo ""
+                      # echo "Tagging docker image..."
+                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
+                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
+                      # echo ""
+                      # echo "Pushing docker image..."
+                      # docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami
+                      # echo ""
+                      # echo "Stage Successful"
 
 ############################################################
 ### END Stage to Configure AKS Cluster                   ###
