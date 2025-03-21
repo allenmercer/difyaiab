@@ -100,6 +100,22 @@ stages:
                       helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
                       echo "Kube Prometheus Stack install successful"
 
+                # Deploy nginx-hello Step
+                - task: AzureCLI@2
+                  displayName: 'Deploy nginx-hello'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying nginx-hello..."
+                      # Deploy nginx-hello
+                      cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
+                      kubectl apply -f nginx-hello01-deployment.yaml
+                      kubectl apply -f nginx-hello02-ingress.yaml
+                      echo "nginx-hello deployment successful"
+
 ############################################################
 ### END Stage to Configure AKS Cluster                   ###
 ############################################################
