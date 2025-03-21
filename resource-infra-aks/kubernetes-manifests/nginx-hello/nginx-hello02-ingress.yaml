@@ -1,4 +1,23 @@
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-nginx-hello-auth
+  namespace: nginx-hello
+data:
+  # For the nginxUser, Ng1nx and Us3r.  Instance Pw001!
+  users: bmdpbnhVc2VyOiRhcHIxJERPRFBOZGQ4JFFjSThBYVlhSzN2TjZDR1daRVNyRTEKCg==
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: middleware-nginx-hello-basicauth
+  namespace: nginx-hello
+
+spec:
+  basicAuth:
+    secret: secret-nginx-hello-auth
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -23,6 +42,8 @@ spec:
     - match: PathPrefix(`/nginx-hello`)
       kind: Rule
       middlewares:
+        - name: middleware-nginx-hello-basicauth
+          namespace: nginx-hello
         - name: middleware-nginx-hello-stripprefix
           namespace: nginx-hello
       services:
