@@ -195,6 +195,8 @@ stages:
                       set -e  # Fail if any command fails
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
+                      pwd
+                      ls
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
                       echo "    BuildID: $(Build.BuildId)
                       echo $(Build.BuildId) > ado_build_version.txt
