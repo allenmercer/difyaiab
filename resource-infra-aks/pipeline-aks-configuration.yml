@@ -177,12 +177,32 @@ stages:
                       # Test hello-world Ingress
                       TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
                       NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
-                      if [ $NGINX_HELLO_RSC == "401" ]; then
+                      if [ $NGINX_HELLO_RSC == "402" ]; then
                         echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
                       else
                         echo "    ERROR: nginx-hello is not responding."
                         exit 1
                       fi
+                # # Test Build Push and Pull Step
+                # # This test will verify that we can build, push, pull, and deploy and image using our pipelines
+                # - task: AzureCLI@2
+                #   displayName: 'Test hello-world Ingress'
+                #   inputs:
+                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
+                #     scriptType: 'bash'
+                #     scriptLocation: 'inlineScript'
+                #     inlineScript: |
+                #       set -e  # Fail if any command fails
+                #       echo "Testing hello-world ingress..."
+                #       # Test hello-world Ingress
+                #       TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
+                #       NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
+                #       if [ $NGINX_HELLO_RSC == "401" ]; then
+                #         echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
+                #       else
+                #         echo "    ERROR: nginx-hello is not responding."
+                #         exit 1
+                #       fi
 
 ############################################################
 ### END Stage to Configure AKS Cluster                   ###
