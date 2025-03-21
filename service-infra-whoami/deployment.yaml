@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: service-infra-whoami
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-infra-whoami-deployment
+  namespace: service-infra-whoami
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: service-infra-whoami
+  template:
+    metadata:
+      labels:
+        app: service-infra-whoami
+    spec:
+      containers:
+        - name: service-infra-whoami
+          image: crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '256Mi'
+          ports:
+            - containerPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: service-infra-whoami-hpa
+  namespace: service-infra-whoami
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: service-infra-whoami-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-infra-whoami-service
+  namespace: service-infra-whoami
+spec:
+  selector:
+    app: service-infra-whoami
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
