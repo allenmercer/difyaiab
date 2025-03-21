@@ -11,23 +11,26 @@ Name the Variable Group with adovg-<AZURE_PROJECT_NAME>-<AZURE_PROJECT_LE>-<AZUR
 e.g. adovg-difyaiab-dev-eastus2-001-resource-inf-aks
 
 Create variables:
-AZURE_RG_NAME           difyai-agent-builder-poc                    The EXISTING resource group name that has been provided to us.
+AZURE_RG_NAME               difyai-agent-builder-poc                    The EXISTING resource group name that has been provided to us.
 # AZURE_RG_LOCATIONS seems redundant because it can be derrived from AZURE_RG_NAME but is necessary for Storage Account creation.
 # In the future AZURE_RG_NAME will be derived from other variables so AZURE_RG_LOCATION will be necessary anyways.
-AZURE_RG_LOCATION       eastus2                                     Necessary for creating storage account.
-AZURE_CLIENT_ID         f6b25cc8-5fc1-448b-b798-e8ad1045647c        Make this value secret with the lock button.
-AZURE_CLIENT_SECRET                                                 Make this value secret with the lock button.
-AZURE_TENANT_ID         78e9dcbe-e650-488b-9f16-902c90e8ff5f        Make this value secret with the lock button.
-AZURE_SUBSCRIPTION_ID   7c85ee7e-a3a7-4a96-8952-94b2ea0b1c95        Make this value secret with the lock button.
-AZURE_PROJECT_NAME      difyaiab                                    Unique name for the service.  e.g. dify ai agent builder 
+AZURE_RG_LOCATION           eastus2                                     Necessary for creating storage account.
+AZURE_CLIENT_ID             f6b25cc8-5fc1-448b-b798-e8ad1045647c        Make this value secret with the lock button.
+AZURE_CLIENT_SECRET                                                     Make this value secret with the lock button.
+AZURE_TENANT_ID             78e9dcbe-e650-488b-9f16-902c90e8ff5f        Make this value secret with the lock button.
+AZURE_SUBSCRIPTION_ID       7c85ee7e-a3a7-4a96-8952-94b2ea0b1c95        Make this value secret with the lock button.
+AZURE_PROJECT_NAME          difyaiab                                    Unique name for the service.  e.g. dify ai agent builder 
 # Variable below this line should rarely be touched.
-AZURE_PROJECT_INSTANCE  001                                         Unique instance for the service.  e.g. 001
+AZURE_PROJECT_INSTANCE      001                                         Unique instance for the service.  e.g. 001
 # We define the lifecycle environment names here and then assign ENVIRONMENT to one of the variables below in the pipeline.
 # That way we can use the same pipeline for multi-lifecycle deployments.
-AZURE_PROJECT_LE        dev                                         Azure project lifecycle environment.
-AZURE_SERVICE_SPN       global-azdo-spn                             Found under Azure Enterprise Applications and App registrations.
-REPO_TFMANIFEST_FOLDER resource-infra-aks/terraform-manifests      Location of the Terraform files in the repo.
-REPO_KUBMANIFEST_FOLDER resource-infra-aks/kubernetes-manifests     Location of the Kubernetes files in the repo.
+AZURE_PROJECT_LE            dev                                         Azure project lifecycle environment.
+AZURE_SERVICE_SPN           global-azdo-spn                             Found under Azure Enterprise Applications and App registrations.
+REPO_TFMANIFEST_FOLDER      resource-infra-aks/terraform-manifests      Location of the Terraform files in the repo.
+REPO_KUBMANIFEST_FOLDER     resource-infra-aks/kubernetes-manifests     Location of the Kubernetes files in the repo.
+REPO_SVCINFRAWHOAMI_FOLDER  resource-infra-aks/service-infra-whoami     Location of the service-infra-whoami folder for cluster testing.
+PROM_HELM_VERSION           69.8.0                                      Prometheus Helm Chart Version
+TRAEFIK_HELM_VERSION        34.4.1                                      Traefik Helm Chart Version
 
 Create a new Pipeline in ADO.
 Choose your GitHub Repo and pipeline-aks-deployment.yml file.
