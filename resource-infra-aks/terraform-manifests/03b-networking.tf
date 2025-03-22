@@ -6,7 +6,7 @@ locals {
 
 # Public IP  Block
 resource "azurerm_public_ip" "tlb01_public_ip" {
-  name                = locals.tlb01_ip_name
+  name                = local.tlb01_ip_name
   resource_group_name = var.rg_name
   location            = var.location
   allocation_method   = "Static"
