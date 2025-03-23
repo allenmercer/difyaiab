@@ -7,6 +7,6 @@ resource "azurerm_role_assignment" "aks_to_pip_tlb01" {
   principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
   role_definition_name = "Network Contributor"
   #scope                = azurerm_kubernetes_cluster.aks.node_resource_group_id  
-  scope                = data.azurerm_resource_group.rg.resource_group_id
+  scope                = data.azurerm_resource_group.rg.id
   skip_service_principal_aad_check = true
 }
