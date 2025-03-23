@@ -4,120 +4,120 @@ variables:
 
 # Stage to Configure AKS Cluster
 stages:
-  # ############################################################
-  # ### Stage to Configure AKS Cluster                       ###
-  # ############################################################
-  # - stage: configureAKSCluster
-  #   # The stage displayName is not displayed in ADO but can be used for documentation purposes.
-  #   displayName: 'Configure AKS Cluster'
-  #   #trigger: manual
-  #   jobs:
-  #     - deployment: configureAKSCluster
-  #       # The deployment displayName is displayed in ADO under Jobs.
-  #       displayName: 'Configure AKS Cluster'
-  #       pool:
-  #         vmImage: 'ubuntu-latest'
-  #       # This is the environment in ADO where the results of this job will be displayed.
-  #       environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
-  #       strategy:
-  #         runOnce:
-  #           deploy:
-  #             steps:
-  #               # Checkout GitHub Repository
-  #               - checkout: self
-  #                 # dispalyName: 'Checkout GitHub Repository'
-  #               # Azure Resource Login Step.
-  #               - task: AzureCLI@2
-  #                 # The step display name will be displayed in ADO in the DOS window in light green.
-  #                 displayName: 'Azure Resource Login'
-  #                 inputs:
-  #                   azureSubscription: '$(AZURE_SERVICE_SPN)'
-  #                   scriptType: 'bash'
-  #                   scriptLocation: 'inlineScript'
-  #                   inlineScript: |
-  #                     set -e  # Fail if any command fails
-  #                     echo "Logging into Azure..."
-  #                     az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
-  #                     az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
-  #                     az account show
-  #                     echo "Azure login successful"
-  #                     echo ""
-  #                     echo "Setting up Kubernetes credentials..."
-  #                     AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
-  #                     az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
-  #                     cat /home/vsts/.kube/config
-  #                     echo "Kubernetes credential setup successful"
-  #               # Install Traefik Step
-  #               - task: AzureCLI@2
-  #                 displayName: 'Install Traefik'
-  #                 inputs:
-  #                   azureSubscription: '$(AZURE_SERVICE_SPN)'
-  #                   scriptType: 'bash'
-  #                   scriptLocation: 'inlineScript'
-  #                   inlineScript: |
-  #                     set -e  # Fail if any command fails
-  #                     echo "Installing Traefik..."
-  #                     # Install Traefik Manifests
-  #                     cd $(REPO_KUBMANIFEST_FOLDER)/traefik
-  #                     kubectl apply -f traefik01-ns.yaml
-  #                     kubectl apply -f traefik02-crd.yaml
-  #                     kubectl apply -f traefik03-crd-rbac.yaml
-  #                     kubectl apply -f traefik04-dashboard-secret.yaml
-  #                     kubectl apply -f traefik05-dashboard-middleware.yaml
-  #                     # Install Traefik Helm Chart
-  #                     helm repo add traefik https://traefik.github.io/charts
-  #                     helm repo update
-  #                     # helm search repo traefik/traefik --versions
-  #                     helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
-  #                     # Get Traefik
-  #                     TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-  #                     until [[ $TRAEFIK_IP != "<pending>" ]]; do
-  #                       echo "    Waiting for traefik ip..."
-  #                       sleep 2
-  #                       TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-  #                     done
-  #                     echo "    Traefik IP: $TRAEFIK_IP"
-  #                     echo "Traefik install successful"
+  ############################################################
+  ### Stage to Configure AKS Cluster                       ###
+  ############################################################
+  - stage: configureAKSCluster
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Configure AKS Cluster'
+    #trigger: manual
+    jobs:
+      - deployment: configureAKSCluster
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Configure AKS Cluster'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  # dispalyName: 'Checkout GitHub Repository'
+                # Azure Resource Login Step.
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Azure Resource Login'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
+                      cat /home/vsts/.kube/config
+                      echo "Kubernetes credential setup successful"
+                # Install Traefik Step
+                - task: AzureCLI@2
+                  displayName: 'Install Traefik'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Installing Traefik..."
+                      # Install Traefik Manifests
+                      cd $(REPO_KUBMANIFEST_FOLDER)/traefik
+                      kubectl apply -f traefik01-ns.yaml
+                      kubectl apply -f traefik02-crd.yaml
+                      kubectl apply -f traefik03-crd-rbac.yaml
+                      kubectl apply -f traefik04-dashboard-secret.yaml
+                      kubectl apply -f traefik05-dashboard-middleware.yaml
+                      # Install Traefik Helm Chart
+                      helm repo add traefik https://traefik.github.io/charts
+                      helm repo update
+                      # helm search repo traefik/traefik --versions
+                      helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml
+                      # Get Traefik
+                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      until [[ $TRAEFIK_IP != "<pending>" ]]; do
+                        echo "    Waiting for traefik ip..."
+                        sleep 2
+                        TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      done
+                      echo "    Traefik IP: $TRAEFIK_IP"
+                      echo "Traefik install successful"
 
-  #               # Install Kube Prometheus Stack Step
-  #               - task: AzureCLI@2
-  #                 displayName: 'Install Kube Prometheus Stack'
-  #                 inputs:
-  #                   azureSubscription: '$(AZURE_SERVICE_SPN)'
-  #                   scriptType: 'bash'
-  #                   scriptLocation: 'inlineScript'
-  #                   inlineScript: |
-  #                     set -e  # Fail if any command fails
-  #                     echo "Installing Kube Prometheus Stack..."
-  #                     # Install Kube Prometheus Stack Manifests
-  #                     cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
-  #                     # kubectl apply -f some_file.yaml
-  #                     # Install Kube Prometheus Stack Helm Chart
-  #                     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-  #                     helm repo update
-  #                     # helm search repo prometheus-community/kube-prometheus-stack --versions
-  #                     # helm -n monitoring get values prometheus
-  #                     helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
-  #                     echo "Kube Prometheus Stack install successful"
+                # Install Kube Prometheus Stack Step
+                - task: AzureCLI@2
+                  displayName: 'Install Kube Prometheus Stack'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Installing Kube Prometheus Stack..."
+                      # Install Kube Prometheus Stack Manifests
+                      cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
+                      # kubectl apply -f some_file.yaml
+                      # Install Kube Prometheus Stack Helm Chart
+                      helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                      helm repo update
+                      # helm search repo prometheus-community/kube-prometheus-stack --versions
+                      # helm -n monitoring get values prometheus
+                      helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
+                      echo "Kube Prometheus Stack install successful"
 
-  #               # Deploy nginx-hello Step
-  #               - task: AzureCLI@2
-  #                 displayName: 'Deploy nginx-hello'
-  #                 inputs:
-  #                   azureSubscription: '$(AZURE_SERVICE_SPN)'
-  #                   scriptType: 'bash'
-  #                   scriptLocation: 'inlineScript'
-  #                   inlineScript: |
-  #                     set -e  # Fail if any command fails
-  #                     echo "Deploying nginx-hello..."
-  #                     # Deploy nginx-hello
-  #                     cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
-  #                     kubectl apply -f nginx-hello01-deployment.yaml
-  #                     kubectl apply -f nginx-hello02-ingress.yaml
-  #                     echo "nginx-hello deployment successful"
-  # ############################################################
-  # ### END Stage to Configure AKS Cluster                   ###
-  # ############################################################
+                # Deploy nginx-hello Step
+                - task: AzureCLI@2
+                  displayName: 'Deploy nginx-hello'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying nginx-hello..."
+                      # Deploy nginx-hello
+                      cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
+                      kubectl apply -f nginx-hello01-deployment.yaml
+                      kubectl apply -f nginx-hello02-ingress.yaml
+                      echo "nginx-hello deployment successful"
+  ############################################################
+  ### END Stage to Configure AKS Cluster                   ###
+  ############################################################
 
   ############################################################
   ### Stage to Test AKS Cluster                            ###
@@ -196,15 +196,15 @@ stages:
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      echo ""
-                      echo "Connecting AKS Cluster to Container Registry"
-                      AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
-                      CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                      echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
-                      echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
-                      echo "    Azure Resource Group: $(AZURE_RG_NAME)"
-                      az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
-                      echo "Connection between AKS Cluster and Container Registry successful"
+                      #echo ""
+                      #echo "Connecting AKS Cluster to Container Registry"
+                      #AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      #CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      #echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
+                      #echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
+                      #echo "    Azure Resource Group: $(AZURE_RG_NAME)"
+                      #az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
+                      #echo "Connection between AKS Cluster and Container Registry successful"
                       echo ""
                       echo "    BuildID: $(Build.BuildId)"
                       echo $(Build.BuildId) > ado_build_version.txt
