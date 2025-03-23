@@ -4,7 +4,8 @@
 # ref: https://learn.microsoft.com/en-us/azure/aks/static-ip?source=recommendations#create-a-service-using-the-static-ip-address
 resource "azurerm_role_assignment" "aks_to_pip_tlb01" {
   description          = "Allows a basic-sku load balancer and basic-sku Public IP integration with an AKS cluster whose load_balancer_sku = basic."
-  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  #principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  prinicpal_id         = azurerm_kubernetes_cluster.aks.system_assigned_identity[0].principal_id
   role_definition_name = "Network Contributor"
   #scope                = azurerm_kubernetes_cluster.aks.node_resource_group_id  
   scope                = data.azurerm_resource_group.rg.id
