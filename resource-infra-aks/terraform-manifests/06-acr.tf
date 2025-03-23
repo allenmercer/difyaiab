@@ -16,9 +16,9 @@ resource "azurerm_container_registry" "cr" {
 
 # Azure Role Assignment Block for AKS to CR
 # May also need to use: az aks update -n difyai-agent-builder-poc-cluster -g difyai-agent-builder-poc --attach-acr crdifyaipoc001
-#resource "azurerm_role_assignment" "aks-to-cr" {
-#  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-#  role_definition_name             = "AcrPull"
-#  scope                            = azurerm_container_registry.cr.id
-#  skip_service_principal_aad_check = true
-#}
+resource "azurerm_role_assignment" "aks-to-cr" {
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.cr.id
+  skip_service_principal_aad_check = true
+}
