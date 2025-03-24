@@ -199,13 +199,6 @@ stages:
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-
-                      echo "Logging into Azure..."
-                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
-                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
-                      az account show
-                      echo "Azure login successful"
-
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
@@ -221,12 +214,12 @@ stages:
                         #echo "Connection between AKS Cluster and Container Registry successful"
                         ### End ###
                       echo ""
-                      echo "Building docker image and pushing to registry..."
+                      echo "Building docker image..."
                       echo "    BuildID: $(Build.BuildId)"
                       echo $(Build.BuildId) > ado_build_version.txt
                       docker build -t service-infra-whoami .
                       echo ""
-                      echo "List docker images and build number..."
+                      echo "List docker images..."
                       docker image ls
                       echo ""
                       echo "Running docker image..."
@@ -235,7 +228,6 @@ stages:
                       echo "Testing docker image..."
                       COUNTER=0
                       DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoam || true) | jq -r '.[0].State.Status' | xargs)
-                      echo $DOCKER_WHOAMI_STATUS
                       until [[ $DOCKER_WHOAMI_STATUS == "running" ]]; do
                         if [ "$COUNTER" -ge 24 ]; then exit 1; fi
                         echo "    Waiting for docker whoami container..."
@@ -243,7 +235,6 @@ stages:
                         COUNTER=$[$COUNTER +1]
                         DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoami || true) | jq -r '.[0].State.Status' | xargs)
                       done
-                      echo "until done"
                       docker container ls
                       curl --connect-timeout 15 --max-time 30 http://localhost:8080
                       curl -s  --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
@@ -259,6 +250,7 @@ stages:
                       docker tag service-infra-whoami $AZURE_CR_URL/v2/dify-poc/service-infra-whoami:latest
                       echo ""
                       echo "Pushing docker image..."
+                      docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/service-infra-whoami
                       echo ""
                       echo "Stage Successful"
