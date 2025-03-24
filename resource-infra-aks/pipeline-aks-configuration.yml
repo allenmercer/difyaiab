@@ -1,6 +1,8 @@
 # Define Variables
 variables:
   - group: adovg-difyaiab-dev-eastus2-001
+  - name: AZURE_CR_URL
+    value: none
 
 # Stage to Configure AKS Cluster
 stages:
