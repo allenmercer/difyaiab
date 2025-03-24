@@ -246,7 +246,7 @@ stages:
                       docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
                       echo ""
                       echo "Tagging docker image..."
-                      AZURE_CR_NAME = "cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_CR_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       AZURE_CR_URL=$(az acr show --resource-group $AZURE_RG_NAME --name $AZURE_CR_NAME | jq -r '.loginServer' | xargs)
                       docker tag service-infra-whoami $AZURE_CR_URL/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
                       docker tag service-infra-whoami $AZURE_CR_URL/v2/dify-poc/service-infra-whoami:latest
