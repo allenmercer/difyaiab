@@ -1,7 +1,3 @@
-# Define Variables
-#variables:
-#  - group: adovg-difyaiab-dev-eastus2-001
-
 # Stage to Configure AKS Cluster
 stages:
   ############################################################
