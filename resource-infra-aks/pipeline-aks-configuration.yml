@@ -256,12 +256,8 @@ stages:
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/service-infra-whoami
                       echo ""
                       echo "Deploying docker image to kubernetes..."
-                      echo "##vso[task.setvariable variable=TEST]test"
-                      echo "##vso[task.setvariable variable=AZURE_CR_URL]test"
-                      echo "VALUE: $(TEST)"
-                      echo "VALUE: $TEST"
-                      echo "VALUE: $(AZURE_CR_URL)"
-                      echo "VALUE: $AZURE_CR_URL"
+                      echo "##vso[task.setvariable variable=sauce]crushed tomatoes"
+                      echo my pipeline variable is $(sauce)
                       echo ""
                       echo "Stage Successful"
 
