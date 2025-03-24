@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: service-infra-whoami
-          image: ${{ variables.AZURE_ACR_URL }}/v2/dify-poc/service-infra-whoami:latest
+          image: __AZURE_CR_URL__/v2/dify-poc/service-infra-whoami:latest
           resources:
             requests:
               cpu: '250m'
