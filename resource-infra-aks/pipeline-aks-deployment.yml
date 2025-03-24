@@ -69,7 +69,7 @@ stages:
                     ### GITOPS###
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       echo "Creating Storage Account $AZURE_ST_NAME..."
                       echo ""
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then 
@@ -147,9 +147,9 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-validate.tfstate'
+                    backendAzureRmKey: 'validate.tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Validate'
@@ -215,9 +215,9 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-$(AZURE_PROJECT_LE).tfstate'
+                    backendAzureRmKey: 'terraform.tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Plan'
@@ -296,9 +296,9 @@ stages:
                     workingDirectory: '$(System.DefaultWorkingDirectory)/$(REPO_TFMANIFEST_FOLDER)'
                     backendServiceArm: '$(AZURE_SERVICE_SPN)'
                     backendAzureRmResourceGroupName: '$(AZURE_RG_NAME)'
-                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
+                    backendAzureRmStorageAccountName: 'sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)'
                     backendAzureRmContainerName: 'tfstate'
-                    backendAzureRmKey: 'aks-$(AZURE_PROJECT_LE).tfstate'
+                    backendAzureRmKey: 'terraform.tfstate'
                     allowTelemetryCollection: false
                 - task: TerraformTaskV4@4
                   displayName: 'Terrafrom Plan Destroy'
@@ -327,7 +327,7 @@ stages:
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_ST_NAME="sttf$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       echo "Deleting Storage Account $AZURE_ST_NAME..."
                       echo ""
                       if $(az storage account list | jq -r '.[]|.name' | grep -q $AZURE_ST_NAME); then
