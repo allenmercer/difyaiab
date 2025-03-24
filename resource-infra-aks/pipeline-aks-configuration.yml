@@ -274,6 +274,7 @@ stages:
                       echo ""
                       echo "Deploying docker image to kubernetes..."
                       echo my pipeline variable is $(AZURE_ACR_URL)
+                      kubectl apply -f deployment.yaml
                       echo ""
                       echo "Stage Successful"
 
