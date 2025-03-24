@@ -82,167 +82,167 @@ stages:
                       echo "    Traefik IP: $TRAEFIK_IP"
                       echo "Traefik install successful"
 
-                # Install Kube Prometheus Stack Step
-                - task: AzureCLI@2
-                  displayName: 'Install Kube Prometheus Stack'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      echo "Installing Kube Prometheus Stack..."
-                      # Install Kube Prometheus Stack Manifests
-                      cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
-                      # kubectl apply -f some_file.yaml
-                      # Install Kube Prometheus Stack Helm Chart
-                      helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-                      helm repo update
-                      # helm search repo prometheus-community/kube-prometheus-stack --versions
-                      # helm -n monitoring get values prometheus
-                      helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
-                      echo "Kube Prometheus Stack install successful"
+#                 # Install Kube Prometheus Stack Step
+#                 - task: AzureCLI@2
+#                   displayName: 'Install Kube Prometheus Stack'
+#                   inputs:
+#                     azureSubscription: '$(AZURE_SERVICE_SPN)'
+#                     scriptType: 'bash'
+#                     scriptLocation: 'inlineScript'
+#                     inlineScript: |
+#                       set -e  # Fail if any command fails
+#                       echo "Installing Kube Prometheus Stack..."
+#                       # Install Kube Prometheus Stack Manifests
+#                       cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
+#                       # kubectl apply -f some_file.yaml
+#                       # Install Kube Prometheus Stack Helm Chart
+#                       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#                       helm repo update
+#                       # helm search repo prometheus-community/kube-prometheus-stack --versions
+#                       # helm -n monitoring get values prometheus
+#                       helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
+#                       echo "Kube Prometheus Stack install successful"
 
-                # Deploy nginx-hello Step
-                - task: AzureCLI@2
-                  displayName: 'Deploy nginx-hello'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      echo "Deploying nginx-hello..."
-                      # Deploy nginx-hello
-                      cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
-                      kubectl apply -f nginx-hello01-deployment.yaml
-                      kubectl apply -f nginx-hello02-ingress.yaml
-                      echo "nginx-hello deployment successful"
-  ############################################################
-  ### END Stage to Configure AKS Cluster                   ###
-  ############################################################
+#                 # Deploy nginx-hello Step
+#                 - task: AzureCLI@2
+#                   displayName: 'Deploy nginx-hello'
+#                   inputs:
+#                     azureSubscription: '$(AZURE_SERVICE_SPN)'
+#                     scriptType: 'bash'
+#                     scriptLocation: 'inlineScript'
+#                     inlineScript: |
+#                       set -e  # Fail if any command fails
+#                       echo "Deploying nginx-hello..."
+#                       # Deploy nginx-hello
+#                       cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
+#                       kubectl apply -f nginx-hello01-deployment.yaml
+#                       kubectl apply -f nginx-hello02-ingress.yaml
+#                       echo "nginx-hello deployment successful"
+#   ############################################################
+#   ### END Stage to Configure AKS Cluster                   ###
+#   ############################################################
 
-  ############################################################
-  ### Stage to Test AKS Cluster                            ###
-  ############################################################
-  - stage: ctestAKSCluster
-    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
-    displayName: 'Test AKS Cluster'
-    #trigger: manual
-    jobs:
-      - deployment: testAKSCluster
-        # The deployment displayName is displayed in ADO under Jobs.
-        displayName: 'Test AKS Cluster'
-        pool:
-          vmImage: 'ubuntu-latest'
-        # This is the environment in ADO where the results of this job will be displayed.
-        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                # Checkout GitHub Repository
-                - checkout: self
-                  # dispalyName: 'Checkout GitHub Repository'
-                # Azure Resource Login Step.
-                - task: AzureCLI@2
-                  # The step display name will be displayed in ADO in the DOS window in light green.
-                  displayName: 'Azure Resource Login'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      echo "Logging into Azure..."
-                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
-                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
-                      az account show
-                      echo "Azure login successful"
-                      echo ""
-                      echo "Setting up Kubernetes credentials..."
-                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
-                      az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
-                      cat /home/vsts/.kube/config
-                      echo "Kubernetes credential setup successful"
-                # Test hello-world Ingress Step
-                # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
-                # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
-                - task: AzureCLI@2
-                  displayName: 'Test hello-world Ingress'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      echo "Testing hello-world ingress..."
-                      # Test hello-world Ingress
-                      TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
-                      NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
-                      if [ $NGINX_HELLO_RSC == "401" ]; then
-                        echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
-                      else
-                        echo "    ERROR: nginx-hello is not responding."
-                        exit 1
-                      fi
-                # Test Build Push Pull and Deploy Step
-                # This test will verify that we can build, push, pull, and deploy and image using our pipelines
-                - task: AzureCLI@2
-                  displayName: 'Test Build Push Pull and Deploy'
-                  inputs:
-                    azureSubscription: '$(AZURE_SERVICE_SPN)'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      set -e  # Fail if any command fails
-                      echo "Testing Build Push Pull and Deploy..."
-                      # Test Build Push Pull and Deploy
-                      cd $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      #echo ""
-                      #echo "Connecting AKS Cluster to Container Registry"
-                      #AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
-                      #CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                      #echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
-                      #echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
-                      #echo "    Azure Resource Group: $(AZURE_RG_NAME)"
-                      #az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
-                      #echo "Connection between AKS Cluster and Container Registry successful"
-                      echo ""
-                      echo "    BuildID: $(Build.BuildId)"
-                      echo $(Build.BuildId) > ado_build_version.txt
+#   ############################################################
+#   ### Stage to Test AKS Cluster                            ###
+#   ############################################################
+#   - stage: ctestAKSCluster
+#     # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+#     displayName: 'Test AKS Cluster'
+#     #trigger: manual
+#     jobs:
+#       - deployment: testAKSCluster
+#         # The deployment displayName is displayed in ADO under Jobs.
+#         displayName: 'Test AKS Cluster'
+#         pool:
+#           vmImage: 'ubuntu-latest'
+#         # This is the environment in ADO where the results of this job will be displayed.
+#         environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
+#         strategy:
+#           runOnce:
+#             deploy:
+#               steps:
+#                 # Checkout GitHub Repository
+#                 - checkout: self
+#                   # dispalyName: 'Checkout GitHub Repository'
+#                 # Azure Resource Login Step.
+#                 - task: AzureCLI@2
+#                   # The step display name will be displayed in ADO in the DOS window in light green.
+#                   displayName: 'Azure Resource Login'
+#                   inputs:
+#                     azureSubscription: '$(AZURE_SERVICE_SPN)'
+#                     scriptType: 'bash'
+#                     scriptLocation: 'inlineScript'
+#                     inlineScript: |
+#                       set -e  # Fail if any command fails
+#                       echo "Logging into Azure..."
+#                       az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+#                       az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+#                       az account show
+#                       echo "Azure login successful"
+#                       echo ""
+#                       echo "Setting up Kubernetes credentials..."
+#                       AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+#                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
+#                       cat /home/vsts/.kube/config
+#                       echo "Kubernetes credential setup successful"
+#                 # Test hello-world Ingress Step
+#                 # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
+#                 # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
+#                 - task: AzureCLI@2
+#                   displayName: 'Test hello-world Ingress'
+#                   inputs:
+#                     azureSubscription: '$(AZURE_SERVICE_SPN)'
+#                     scriptType: 'bash'
+#                     scriptLocation: 'inlineScript'
+#                     inlineScript: |
+#                       set -e  # Fail if any command fails
+#                       echo "Testing hello-world ingress..."
+#                       # Test hello-world Ingress
+#                       TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
+#                       NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
+#                       if [ $NGINX_HELLO_RSC == "401" ]; then
+#                         echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
+#                       else
+#                         echo "    ERROR: nginx-hello is not responding."
+#                         exit 1
+#                       fi
+#                 # Test Build Push Pull and Deploy Step
+#                 # This test will verify that we can build, push, pull, and deploy and image using our pipelines
+#                 - task: AzureCLI@2
+#                   displayName: 'Test Build Push Pull and Deploy'
+#                   inputs:
+#                     azureSubscription: '$(AZURE_SERVICE_SPN)'
+#                     scriptType: 'bash'
+#                     scriptLocation: 'inlineScript'
+#                     inlineScript: |
+#                       set -e  # Fail if any command fails
+#                       echo "Testing Build Push Pull and Deploy..."
+#                       # Test Build Push Pull and Deploy
+#                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
+#                       #echo ""
+#                       #echo "Connecting AKS Cluster to Container Registry"
+#                       #AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+#                       #CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+#                       #echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
+#                       #echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
+#                       #echo "    Azure Resource Group: $(AZURE_RG_NAME)"
+#                       #az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
+#                       #echo "Connection between AKS Cluster and Container Registry successful"
+#                       echo ""
+#                       echo "    BuildID: $(Build.BuildId)"
+#                       echo $(Build.BuildId) > ado_build_version.txt
 
-                      # echo ""
-                      # echo "Building docker image and pushing to registry..."
-                      # cd service-infra-whoami
-                      # docker build -t service-infra-whoami .
-                      # echo ""
-                      # echo "List docker images and build number..."
-                      # docker image ls
-                      # echo $(Build.BuildId)
-                      # echo ""
-                      # echo "Running docker image..."
-                      # docker run -d -p 8080:80 service-infra-whoami
-                      # echo ""
-                      # echo "Testing docker image..."
-                      # sleep 5
-                      # docker container ls
-                      # curl http://localhost:8080
-                      # curl -s  http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
-                      # echo ""
-                      # echo "Stopping docker image..."
-                      # docker container ls
-                      # docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
-                      # echo ""
-                      # echo "Tagging docker image..."
-                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
-                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
-                      # echo ""
-                      # echo "Pushing docker image..."
-                      # docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami
-                      # echo ""
-                      # echo "Stage Successful"
+#                       # echo ""
+#                       # echo "Building docker image and pushing to registry..."
+#                       # cd service-infra-whoami
+#                       # docker build -t service-infra-whoami .
+#                       # echo ""
+#                       # echo "List docker images and build number..."
+#                       # docker image ls
+#                       # echo $(Build.BuildId)
+#                       # echo ""
+#                       # echo "Running docker image..."
+#                       # docker run -d -p 8080:80 service-infra-whoami
+#                       # echo ""
+#                       # echo "Testing docker image..."
+#                       # sleep 5
+#                       # docker container ls
+#                       # curl http://localhost:8080
+#                       # curl -s  http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+#                       # echo ""
+#                       # echo "Stopping docker image..."
+#                       # docker container ls
+#                       # docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
+#                       # echo ""
+#                       # echo "Tagging docker image..."
+#                       # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
+#                       # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
+#                       # echo ""
+#                       # echo "Pushing docker image..."
+#                       # docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami
+#                       # echo ""
+#                       # echo "Stage Successful"
 
-############################################################
-### END Stage to Configure AKS Cluster                   ###
-############################################################
+# ############################################################
+# ### END Stage to Configure AKS Cluster                   ###
+# ############################################################
