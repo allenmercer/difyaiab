@@ -191,6 +191,23 @@ stages:
                 #         echo "    ERROR: nginx-hello is not responding."
                 #         exit 1
                 #       fi
+
+                # Set AZURE_ACR_URL Variable Step
+                # This stpe will create the AZURE_ACR_URL variable that will be used to push and pull images.
+                - task: AzureCLI@2
+                  displayName: 'Set AZURE_ACR_URL Variable'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Setting AZURE_ACR_URL variable..."
+                      # Set AZURE_ACR_URL Variable
+                      AZURE_CR_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_CR_URL=$(az acr show --resource-group $AZURE_RG_NAME --name $AZURE_CR_NAME | jq -r '.loginServer' | xargs)
+                      echo "##vso[task.setvariable variable=AZURE_ACR_URL]$AZURE_CR_URL"
+
                 # Test Build Push Pull and Deploy Step
                 # This test will verify that we can build, push, pull, and deploy and image using our pipelines
                 - task: AzureCLI@2
@@ -256,8 +273,7 @@ stages:
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/service-infra-whoami
                       echo ""
                       echo "Deploying docker image to kubernetes..."
-                      echo "##vso[task.setvariable variable=sauce]crushed tomatoes"
-                      echo my pipeline variable is $(sauce)
+                      echo my pipeline variable is $(AZURE_ACR_URL)
                       echo ""
                       echo "Stage Successful"
 
