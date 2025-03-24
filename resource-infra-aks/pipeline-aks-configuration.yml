@@ -253,6 +253,10 @@ stages:
                       docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/service-infra-whoami
                       echo ""
+                      echo "Deploying docker image to kubernetes..."
+                      echo "##vso[task.setvariable variable=AZURE_CR_URL]$AZURE_CR_URL"
+                      echo $(AZURE_CR_URL)
+                      echo ""
                       echo "Stage Successful"
 
 ############################################################

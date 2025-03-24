@@ -21,6 +21,7 @@ FROM scratch
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/whoami/whoami .
+COPY ado_build_version.txt .
 
 ENTRYPOINT ["/whoami"]
 EXPOSE 80

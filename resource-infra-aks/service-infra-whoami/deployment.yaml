@@ -6,7 +6,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-infra-whoami-deployment
+  name: deployment-service-infra-whoami
   namespace: service-infra-whoami
 spec:
   replicas: 2
@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: service-infra-whoami
-          image: crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
+          image: ${{ variables.AZURE_CR_URL }}/v2/dify-poc/service-infra-whoami:latest
           resources:
             requests:
               cpu: '250m'
@@ -34,13 +34,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: service-infra-whoami-hpa
+  name: hpa-service-infra-whoami
   namespace: service-infra-whoami
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: service-infra-whoami-deployment
+    name: deployment-service-infra-whoami
   minReplicas: 2
   maxReplicas: 10
   metrics:
@@ -60,13 +60,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-infra-whoami-service
+  name: service-cip-infra-whoami
   namespace: service-infra-whoami
 spec:
-  selector:
-    app: service-infra-whoami
+  type: ClusterIP
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: LoadBalancer
+  selector:
+    app: service-infra-whoami
