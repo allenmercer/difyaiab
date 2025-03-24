@@ -199,32 +199,30 @@ stages:
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
                       cd $(REPO_SVCINFRAWHOAMI_FOLDER)
-                      #echo ""
-                      #echo "Connecting AKS Cluster to Container Registry"
-                      #AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
-                      #CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                      #echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
-                      #echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
-                      #echo "    Azure Resource Group: $(AZURE_RG_NAME)"
-                      #az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
-                      #echo "Connection between AKS Cluster and Container Registry successful"
+                        ### This is now done with a Role Binding in Terraform ###
+                        #echo ""
+                        #echo "Connecting AKS Cluster to Container Registry"
+                        #AKS_CLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                        #CONTAINER_REGISTRY_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                        #echo "    AKS Cluster Name: $AKS_CLUSTER_NAME"
+                        #echo "    Container Registry Name: $CONTAINER_REGISTRY_NAME"
+                        #echo "    Azure Resource Group: $(AZURE_RG_NAME)"
+                        #az aks update -n $AKS_CLUSTER_NAME -g $(AZURE_RG_NAME) --attach-acr $CONTAINER_REGISTRY_NAME
+                        #echo "Connection between AKS Cluster and Container Registry successful"
+                        ### End ###
                       echo ""
+                      echo "Building docker image and pushing to registry..."
                       echo "    BuildID: $(Build.BuildId)"
                       echo $(Build.BuildId) > ado_build_version.txt
-
-                      # echo ""
-                      # echo "Building docker image and pushing to registry..."
-                      # cd service-infra-whoami
-                      # docker build -t service-infra-whoami .
-                      # echo ""
-                      # echo "List docker images and build number..."
-                      # docker image ls
-                      # echo $(Build.BuildId)
-                      # echo ""
-                      # echo "Running docker image..."
-                      # docker run -d -p 8080:80 service-infra-whoami
-                      # echo ""
-                      # echo "Testing docker image..."
+                      docker build -t service-infra-whoami .
+                      echo ""
+                      echo "List docker images and build number..."
+                      docker image ls
+                      echo ""
+                      echo "Running docker image..."
+                      docker run -d -p 8080:80 service-infra-whoami
+                      echo ""
+                      echo "Testing docker image..."
                       # sleep 5
                       # docker container ls
                       # curl http://localhost:8080
