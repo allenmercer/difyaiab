@@ -3,19 +3,19 @@ A "Lifecycle Environment" can be POC, DEV, PROD, etc.
 
 Create a new Environment in ADO for EVERY Lifecycle Environment that you plan to depoly.
 Name the Environment with adoenv-<AZURE_PROJECT_NAME>-<AZURE_PROJECT_LE>-<AZURE_RG_LOCATION><AZURE_PROJECT_INSTANCE>
-e.g. adoenv-difyaiab-dev-eastus2-001
+e.g. adoenv-difyab-dev-eastus2-001
 Environments will contain the lifecycle environment so that we can view the deployment of each lifecycle separately.
 
 Create a new Variable Group in ADO.
 Name the Variable Group with adovg-<AZURE_PROJECT_NAME>
-e.g. adovg-difyaiab
+e.g. adovg-difyab
 This Variable Group will hold global variables for the project.
 
 Create variables:
 AZURE_RG_NAME               difyai-agent-builder-poc                    The EXISTING resource group name that has been provided to us.
 AZURE_TENANT_ID             78e9dcbe-e650-488b-9f16-902c90e8ff5f        Make this value secret with the lock button.
 AZURE_SUBSCRIPTION_ID       7c85ee7e-a3a7-4a96-8952-94b2ea0b1c95        Make this value secret with the lock button.
-AZURE_PROJECT_NAME          difyaiab                                    Unique name for the service.  e.g. dify ai agent builder 
+AZURE_PROJECT_NAME          difyab                                    Unique name for the service.  e.g. dify ai agent builder 
 # Variable below this line should rarely be touched.
 AZURE_SERVICE_SPN           global-azdo-spn                             Found under Azure Enterprise Applications and App registrations.
 REPO_TFMANIFEST_FOLDER      resource-infra-aks/terraform-manifests      Location of the Terraform files in the repo.
@@ -26,7 +26,7 @@ TRAEFIK_HELM_VERSION        34.4.1                                      Traefik 
 
 Create another new Variable Group in ADO.
 Name the Variable Group with adovg-<AZURE_PROJECT_NAME>-<AZURE_RG_LOCATION>
-e.g. adovg-difyaiab-eastus2
+e.g. adovg-difyab-eastus2
 This Variable Group will hold region specific variables for the project.
 Create variables:
 # AZURE_RG_LOCATION seems redundant because it can be derrived from AZURE_RG_NAME but is necessary for Storage Account creation.

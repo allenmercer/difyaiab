@@ -43,80 +43,80 @@ stages:
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
-                # # Install Traefik Step
-                # - task: AzureCLI@2
-                #   displayName: 'Install Traefik'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Installing Traefik..."
-                #       # Install Traefik Manifests
-                #       cd $(REPO_KUBMANIFEST_FOLDER)/traefik
-                #       kubectl apply -f traefik01-ns.yaml
-                #       kubectl apply -f traefik02-crd.yaml
-                #       kubectl apply -f traefik03-crd-rbac.yaml
-                #       kubectl apply -f traefik04-dashboard-secret.yaml
-                #       kubectl apply -f traefik05-dashboard-middleware.yaml
-                #       # Install Traefik Helm Chart
-                #       helm repo add traefik https://traefik.github.io/charts
-                #       helm repo update
-                #       # helm search repo traefik/traefik --versions
-                #       AZURE_PIPTLB01_NAME="pip-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)-tlb01"
-                #       helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml \
-                #         --set-string service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"="$(AZURE_RG_NAME)" \
-                #         --set-string service.annotations."service\.beta\.kubernetes\.io/azure-pip-name"="$AZURE_PIPTLB01_NAME"
-                #       # Get Traefik LB Static IP
-                #       COUNTER=0
-                #       TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                #       until [[ $TRAEFIK_IP != "<pending>" ]]; do
-                #         if [ "$COUNTER" -ge 12 ]; then exit 1; fi
-                #         echo "    Waiting for traefik ip..."
-                #         sleep 10
-                #         COUNTER=$[$COUNTER +1]
-                #         TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                #       done
-                #       echo "    Traefik IP: $TRAEFIK_IP"
-                #       echo "Traefik install successful"
+                # Install Traefik Step
+                - task: AzureCLI@2
+                  displayName: 'Install Traefik'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Installing Traefik..."
+                      # Install Traefik Manifests
+                      cd $(REPO_KUBMANIFEST_FOLDER)/traefik
+                      kubectl apply -f traefik01-ns.yaml
+                      kubectl apply -f traefik02-crd.yaml
+                      kubectl apply -f traefik03-crd-rbac.yaml
+                      kubectl apply -f traefik04-dashboard-secret.yaml
+                      kubectl apply -f traefik05-dashboard-middleware.yaml
+                      # Install Traefik Helm Chart
+                      helm repo add traefik https://traefik.github.io/charts
+                      helm repo update
+                      # helm search repo traefik/traefik --versions
+                      AZURE_PIPTLB01_NAME="pip-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)-tlb01"
+                      helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml \
+                        --set-string service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"="$(AZURE_RG_NAME)" \
+                        --set-string service.annotations."service\.beta\.kubernetes\.io/azure-pip-name"="$AZURE_PIPTLB01_NAME"
+                      # Get Traefik LB Static IP
+                      COUNTER=0
+                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      until [[ $TRAEFIK_IP != "<pending>" ]]; do
+                        if [ "$COUNTER" -ge 12 ]; then exit 1; fi
+                        echo "    Waiting for traefik ip..."
+                        sleep 10
+                        COUNTER=$[$COUNTER +1]
+                        TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      done
+                      echo "    Traefik IP: $TRAEFIK_IP"
+                      echo "Traefik install successful"
 
-                # # Install Kube Prometheus Stack Step
-                # - task: AzureCLI@2
-                #   displayName: 'Install Kube Prometheus Stack'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Installing Kube Prometheus Stack..."
-                #       # Install Kube Prometheus Stack Manifests
-                #       cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
-                #       # kubectl apply -f some_file.yaml
-                #       # Install Kube Prometheus Stack Helm Chart
-                #       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-                #       helm repo update
-                #       # helm search repo prometheus-community/kube-prometheus-stack --versions
-                #       # helm -n monitoring get values prometheus
-                #       helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
-                #       echo "Kube Prometheus Stack install successful"
+                # Install Kube Prometheus Stack Step
+                - task: AzureCLI@2
+                  displayName: 'Install Kube Prometheus Stack'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Installing Kube Prometheus Stack..."
+                      # Install Kube Prometheus Stack Manifests
+                      cd $(REPO_KUBMANIFEST_FOLDER)/prometheus
+                      # kubectl apply -f some_file.yaml
+                      # Install Kube Prometheus Stack Helm Chart
+                      helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                      helm repo update
+                      # helm search repo prometheus-community/kube-prometheus-stack --versions
+                      # helm -n monitoring get values prometheus
+                      helm upgrade --install --create-namespace --version $(PROM_HELM_VERSION) --namespace=monitoring prometheus prometheus-community/kube-prometheus-stack --values=prometheus-chart-values.yaml
+                      echo "Kube Prometheus Stack install successful"
 
-                # # Deploy nginx-hello Step
-                # - task: AzureCLI@2
-                #   displayName: 'Deploy nginx-hello'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Deploying nginx-hello..."
-                #       # Deploy nginx-hello
-                #       cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
-                #       kubectl apply -f nginx-hello01-deployment.yaml
-                #       kubectl apply -f nginx-hello02-ingress.yaml
-                #       echo "nginx-hello deployment successful"
+                # Deploy nginx-hello Step
+                - task: AzureCLI@2
+                  displayName: 'Deploy nginx-hello'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying nginx-hello..."
+                      # Deploy nginx-hello
+                      cd $(REPO_KUBMANIFEST_FOLDER)/nginx-hello
+                      kubectl apply -f nginx-hello01-deployment.yaml
+                      kubectl apply -f nginx-hello02-ingress.yaml
+                      echo "nginx-hello deployment successful"
   ############################################################
   ### END Stage to Configure AKS Cluster                   ###
   ############################################################
@@ -164,27 +164,27 @@ stages:
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
-                # # Test hello-world Ingress Step
-                # # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
-                # # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
-                # - task: AzureCLI@2
-                #   displayName: 'Test hello-world Ingress'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Testing hello-world ingress..."
-                #       # Test hello-world Ingress
-                #       TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
-                #       NGINX_HELLO_RSC=$(curl -k --connect-timeout 15 --max-time 30 https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
-                #       if [ $NGINX_HELLO_RSC == "401" ]; then
-                #         echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
-                #       else
-                #         echo "    ERROR: nginx-hello is not responding."
-                #         exit 1
-                #       fi
+                # Test hello-world Ingress Step
+                # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
+                # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
+                - task: AzureCLI@2
+                  displayName: 'Test hello-world Ingress'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Testing hello-world ingress..."
+                      # Test hello-world Ingress
+                      TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
+                      NGINX_HELLO_RSC=$(curl -k --connect-timeout 15 --max-time 30 https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
+                      if [ $NGINX_HELLO_RSC == "401" ]; then
+                        echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
+                      else
+                        echo "    ERROR: nginx-hello is not responding."
+                        exit 1
+                      fi
                 # Test Build Push Pull and Deploy Step
                 # This test will verify that we can build, push, pull, and deploy and image using our pipelines
                 - task: AzureCLI@2

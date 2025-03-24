@@ -89,7 +89,7 @@ variable "aks_user_disksize" {
 #    workloadtier = "infrastructure"
 #    customer = "ailevate"
 #    environment = "poc"
-#    workload = "difyaiab"
+#    workload = "difyab"
 #    # END MANDATORY TAGS
 #  }
 #}
