@@ -258,6 +258,7 @@ stages:
                       echo "Deploying docker image to kubernetes..."
                       echo "##vso[task.setvariable variable=TEST]test"
                       echo "VALUE: $(TEST)"
+                      echo "VALUE: $TEST"
                       echo ""
                       echo "Stage Successful"
 
