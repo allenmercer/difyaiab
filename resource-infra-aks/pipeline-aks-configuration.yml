@@ -72,11 +72,14 @@ stages:
                       helm upgrade --install --version $(TRAEFIK_HELM_VERSION) --namespace=traefik traefik traefik/traefik --values=traefik-chart-values.yaml \
                         --set-string service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"="$(AZURE_RG_NAME)" \
                         --set-string service.annotations."service\.beta\.kubernetes\.io/azure-pip-name"="$AZURE_PIPTLB01_NAME"
-                      # Get Traefik
+                      # Get Traefik LB Static IP
+                      COUNTER=0
                       TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
                       until [[ $TRAEFIK_IP != "<pending>" ]]; do
+                        if [ "$COUNTER" -ge 12 ]; then exit 1; fi
                         echo "    Waiting for traefik ip..."
-                        sleep 2
+                        sleep 10
+                        COUNTER=$[$COUNTER +1]
                         TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
                       done
                       echo "    Traefik IP: $TRAEFIK_IP"
@@ -179,7 +182,7 @@ stages:
                       echo "Testing hello-world ingress..."
                       # Test hello-world Ingress
                       TRAEFIK_LB_IP=$(kubectl -n traefik get service | grep traefik | grep LoadBalancer | awk '{ print $4 }' | xargs)
-                      NGINX_HELLO_RSC=$(curl -k https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
+                      NGINX_HELLO_RSC=$(curl -k --connect-timeout 15 --max-time 30 https://"$TRAEFIK_LB_IP"/nginx-hello -s -o /dev/null -w '%{http_code}' | xargs)
                       if [ $NGINX_HELLO_RSC == "401" ]; then
                         echo "    The nginx-hello service is deployed and exposed to the internet using HTTPS and password protection."
                       else
@@ -220,26 +223,34 @@ stages:
                       docker image ls
                       echo ""
                       echo "Running docker image..."
-                      docker run -d -p 8080:80 service-infra-whoami
+                      docker run -d --name service-infra-whoami -p 8080:80 service-infra-whoami
                       echo ""
                       echo "Testing docker image..."
-                      # sleep 5
-                      # docker container ls
-                      # curl http://localhost:8080
-                      # curl -s  http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
-                      # echo ""
-                      # echo "Stopping docker image..."
-                      # docker container ls
-                      # docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
-                      # echo ""
-                      # echo "Tagging docker image..."
-                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
-                      # docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
-                      # echo ""
-                      # echo "Pushing docker image..."
-                      # docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami
-                      # echo ""
-                      # echo "Stage Successful"
+                      COUNTER=0
+                      DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoam || true) | jq -r '.[0].State.Status' | xargs)
+                      until [[ $DOCKER_WHOAMI_STATUS == "running" ]]; do
+                        if [ "$COUNTER" -ge 24 ]; then exit 1; fi
+                        echo "    Waiting for docker whoami container..."
+                        sleep 5
+                        COUNTER=$[$COUNTER +1]
+                        DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoami || true) | jq -r '.[0].State.Status' | xargs)
+                      done
+                      docker container ls
+                      curl --connect-timeout 15 --max-time 30 http://localhost:8080
+                      curl -s  --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      echo ""
+                      echo "Stopping docker image..."
+                      docker container ls
+                      docker container rm $(docker container ls | grep service-infra-whoami | awk '{print $1}') --force
+                      echo ""
+                      echo "Tagging docker image..."
+                      docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:1.1.$(Build.BuildId)
+                      docker tag service-infra-whoami crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami:latest
+                      echo ""
+                      echo "Pushing docker image..."
+                      docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/service-infra-whoami
+                      echo ""
+                      echo "Stage Successful"
 
 ############################################################
 ### END Stage to Configure AKS Cluster                   ###
