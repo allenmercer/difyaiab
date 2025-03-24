@@ -17,10 +17,6 @@ AZURE_TENANT_ID             78e9dcbe-e650-488b-9f16-902c90e8ff5f        Make thi
 AZURE_SUBSCRIPTION_ID       7c85ee7e-a3a7-4a96-8952-94b2ea0b1c95        Make this value secret with the lock button.
 AZURE_PROJECT_NAME          difyaiab                                    Unique name for the service.  e.g. dify ai agent builder 
 # Variable below this line should rarely be touched.
-**AZURE_PROJECT_INSTANCE      001                                         Unique instance for the service.  e.g. 001
-# We define the lifecycle environment names here and then assign ENVIRONMENT to one of the variables below in the pipeline.
-# That way we can use the same pipeline for multi-lifecycle deployments.
-**AZURE_PROJECT_LE            dev                                         Azure project lifecycle environment.
 AZURE_SERVICE_SPN           global-azdo-spn                             Found under Azure Enterprise Applications and App registrations.
 REPO_TFMANIFEST_FOLDER      resource-infra-aks/terraform-manifests      Location of the Terraform files in the repo.
 REPO_KUBMANIFEST_FOLDER     resource-infra-aks/kubernetes-manifests     Location of the Kubernetes files in the repo.
@@ -52,6 +48,9 @@ Under Triggers, add you triggers for CI and Pull Requests.
 Save again.
 Under "Variables > Variable Groups," like the two previously created variable groups.
 Save again.
+Under "Pipeline Variables," add the following two variables:
+AZURE_PROJECT_INSTANCE      001                                         Unique instance for the service.  e.g. 001
+AZURE_PROJECT_LE            dev                                         Azure project lifecycle environment.
 
 Modify resource-infra-aks/terraform-manifests/02-variables.tf with your custom variables for the resources.
 In the "locals tags" section, leave the "# BEGIN ST TAGS" and "# END ST TAGS" comments in place.
