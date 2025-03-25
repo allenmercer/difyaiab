@@ -1,6 +1,6 @@
 import json
 
-from app.utils.logger import Logger
+from ai_ailevate_logging.logger import Logger
 
 logger = Logger("Dify-POC-Agent")
 
@@ -15,7 +15,7 @@ class JsonUtil:
         try:
             data_dict = json.loads(string_dict)
         except Exception as e:
-            logger.error("Error parsing JSON to dict: %s", e)
+            logger.error(f"Could not convert {string_dict} to dictionary ")
             data_dict = {}
         return data_dict
 
@@ -35,5 +35,5 @@ class JsonUtil:
             else:
                 return []
         except Exception as e:
-            logger.error("Error parsing JSON: %s", e)
+            logger.error(f"Could not convert {json_str} to a json list")
             return []

@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ai-ailevate-logging"
+version = "0.1.0"
+description = "Standardized logging for Ailevate"
+authors = ["Agent Builder Team"]
+packages = [
+    { include = "ai_ailevate_logging" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-json-logger = "^3.3.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

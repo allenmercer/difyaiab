@@ -45,18 +45,17 @@ stages:
                       az account show
                       echo ""
                       echo "Setting up Kubernetes credentials..."
-                      az aks get-credentials --admin --name aks-difyaiab-dev-eastus2-001 --resource-group difyai-agent-builder-poc
+                      az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
                       cat /home/vsts/.kube/config
                       echo ""
                       echo "Logging into Azure Container Registry..."
-                      docker login crdifyaiabdeveastus2001.azurecr.io -u $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.username') -p $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.passwords[0]|.value')
+                      docker login https://crdifyaipoc001.azurecr.io -u $(az acr credential show -n crdifyaipoc001 | jq -r '.username') -p $(az acr credential show -n crdifyaipoc001 | jq -r '.passwords[0]|.value')
                       echo "List Files"
                       pwd
                       ls
                       echo ""
                       echo "Building docker image and pushing to registry..."
-                      cd service-ai-agents
-                      docker build -t difyaiab-be .
+                      docker build -f service-ai-agents/Dockerfile -t difyaiab-be .
                       echo ""
                       echo "List docker images and build number..."
                       docker image ls
@@ -68,7 +67,7 @@ stages:
                       -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
                       -e LLM_MODEL=gpt-4o \
                       -e LLM_API_VERSION=2024-10-21 \
-                      -e DIFY_BACKEND=http://135.232.106.156 \
+                      -e DIFY_BACKEND=http://dify-nginx.diffy \
                       difyaiab-be
                       #docker run -d -p 8080:8000 service-ai-agents
                       echo ""
@@ -83,11 +82,11 @@ stages:
                       docker container rm $(docker container ls | grep difyaiab-be | awk '{print $1}') --force
                       echo ""
                       echo "Tagging docker image..."
-                      docker tag difyaiab-be crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be:1.1.$(Build.BuildId)
-                      docker tag difyaiab-be crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be:latest
+                      docker tag difyaiab-be crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-be:1.1.$(Build.BuildId)
+                      docker tag difyaiab-be crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-be:latest
                       echo ""
                       echo "Pushing docker image..."
-                      docker push --all-tags crdifyaiabdeveastus2001.azurecr.io/v2/dify-poc/difyaiab-be
+                      docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-be
                       echo ""
                       echo "Stage Successful"
                   displayName: 'Build and Push Docker Image'
@@ -124,7 +123,7 @@ stages:
                       echo ""
                       echo "Setting up Kubernetes credentials..."
                       #echo "" > /home/vsts/.kube/config
-                      az aks get-credentials --admin --name aks-difyaiab-dev-eastus2-001 --resource-group difyai-agent-builder-poc
+                      az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
                       echo ""
                       echo "Kube Config File"
                       cat /home/vsts/.kube/config
@@ -133,7 +132,7 @@ stages:
                       kubectl config get-contexts
                       echo ""
                       echo "Logging into Azure Container Registry..."
-                      docker login https://crdifyaiabdeveastus2001.azurecr.io -u $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.username') -p $(az acr credential show -n crdifyaiabdeveastus2001 | jq -r '.passwords[0]|.value')
+                      docker login https://crdifyaipoc001.azurecr.io -u $(az acr credential show -n crdifyaipoc001 | jq -r '.username') -p $(az acr credential show -n crdifyaipoc001 | jq -r '.passwords[0]|.value')
                       echo "List Files"
                       pwd
                       ls -al
@@ -141,9 +140,16 @@ stages:
                       cd service-ai-agents
                       echo ""
                       echo "Get kubernetes namespaces..."
-                      #kubectl get ns
+                      kubectl version
+                      kubectl get ns
                       echo ""
-                      echo "Deploy kubernetes pod..."
+                      echo "Deploy kubernetes namespace..."
+                      kubectl apply -f namespace.yaml
+                      echo ""
+                      #echo "Delete old resources..."
+                      #kubectl delete -f deployment.yaml
+                      #echo ""
+                      echo "Deploy kubernetes resources..."
                       kubectl apply -f deployment.yaml
                       echo ""
                       echo "Get service ip..."

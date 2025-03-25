@@ -2,11 +2,14 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, Protocol, TypedDict
 
+from ai_ailevate_logging.logger import Logger
 import yaml
 from app.core.prompts import StaticPrompts
 from app.services.llm_client import generic_llm_call
 from app.utils.JsonUtil import JsonUtil
 import yaml
+
+logger = Logger("Dify-POC-Agent")
 
 
 class NoAliasDumper(yaml.SafeDumper):
@@ -67,6 +70,15 @@ class WorkflowGraph(TypedDict):
     viewport: Dict[str, Any]
 
 
+class Workflow(TypedDict):
+    """Complete workflow graph structure"""
+
+    features: Dict[str, Any]
+    graph: WorkflowGraph
+    environment_variables: List[Any]
+    conversation_variables: List[Any]
+
+
 class NodeProcessor(Protocol):
     """Protocol defining the interface for all node processors"""
 
@@ -78,6 +90,7 @@ class NodeProcessor(Protocol):
         node_id: str,
         position: NodePosition,
         previous_node_id: Optional[str] = None,
+        previous_node_type: Optional[str] = None,
     ) -> Node:
         """Process a node and generate its data"""
         ...
@@ -94,6 +107,7 @@ class StartNodeProcessor:
         node_id: str,
         position: NodePosition,
         previous_node_id: Optional[str] = None,
+        previous_node_type: Optional[str] = None,
     ) -> Node:
         return {
             "data": {
@@ -126,11 +140,12 @@ class EndNodeProcessor:
         node_id: str,
         position: NodePosition,
         previous_node_id: Optional[str] = None,
+        previous_node_type: Optional[str] = None,
     ) -> Node:
         outputs = []
         if previous_node_id:
             # Different output handling based on previous node type
-            if "http" in previous_node_id:
+            if previous_node_type and "http" in previous_node_type:
                 outputs = await generate_http_end(message, previous_node_id)
             else:
                 outputs = [
@@ -168,6 +183,7 @@ class LLMNodeProcessor:
         node_id: str,
         position: NodePosition,
         previous_node_id: Optional[str] = None,
+        previous_node_type: Optional[str] = None,
     ) -> Node:
         return {
             "data": {
@@ -211,6 +227,7 @@ class HTTPNodeProcessor:
         node_id: str,
         position: NodePosition,
         previous_node_id: Optional[str] = None,
+        previous_node_type: Optional[str] = None,
     ) -> Node:
         return {
             "data": await generate_http_data(message),
@@ -262,6 +279,45 @@ class WorkflowBuilder:
 
         return {"x": base_x + index * step_x, "y": y}
 
+    def _generate_features(self) -> Dict[str, Any]:
+        """Generate default features configuration"""
+        return {
+            "file_upload": {
+                "allowed_file_extensions": [
+                    ".JPG",
+                    ".JPEG",
+                    ".PNG",
+                    ".GIF",
+                    ".WEBP",
+                    ".SVG",
+                ],
+                "allowed_file_types": ["image"],
+                "allowed_file_upload_methods": ["local_file", "remote_url"],
+                "enabled": False,
+                "fileUploadConfig": {
+                    "audio_file_size_limit": 50,
+                    "batch_count_limit": 5,
+                    "file_size_limit": 15,
+                    "image_file_size_limit": 10,
+                    "video_file_size_limit": 100,
+                    "workflow_file_upload_limit": 10,
+                },
+                "image": {
+                    "enabled": False,
+                    "number_limits": 3,
+                    "transfer_methods": ["local_file", "remote_url"],
+                },
+                "number_limits": 3,
+            },
+            "opening_statement": "",
+            "retriever_resource": {"enabled": True},
+            "sensitive_word_avoidance": {"enabled": False},
+            "speech_to_text": {"enabled": False},
+            "suggested_questions": [],
+            "suggested_questions_after_answer": {"enabled": False},
+            "text_to_speech": {"enabled": False, "language": "", "voice": ""},
+        }
+
     async def create_edge(
         self, source_id: str, target_id: str, source_type: str, target_type: str
     ) -> Edge:
@@ -281,9 +337,15 @@ class WorkflowBuilder:
             "zIndex": 0,
         }
 
-    async def build_workflow(
-        self, message: str, node_types: List[str]
-    ) -> WorkflowGraph:
+    async def build_workflow(self, message: str, node_types: List[str]) -> Workflow:
+        return {
+            "features": self._generate_features(),
+            "graph": await self.build_graph(message, node_types),
+            "environment_variables": [],
+            "conversation_variables": [],
+        }
+
+    async def build_graph(self, message: str, node_types: List[str]) -> WorkflowGraph:
         """Build a complete workflow with the specified node types"""
         nodes = []
         edges = []
@@ -307,6 +369,7 @@ class WorkflowBuilder:
         for i, node_type in enumerate(node_types):
             position = self._calculate_position(i, len(node_types))
             previous_id = node_ids[i - 1] if i > 0 else None
+            previous_node_type = node_types[i - 1] if i > 0 else None
 
             # Process the node with the appropriate processor
             processor = self.node_processors[node_type]
@@ -315,6 +378,7 @@ class WorkflowBuilder:
                 node_id=node_ids[i],
                 position=position,
                 previous_node_id=previous_id,
+                previous_node_type=previous_node_type,
             )
 
             nodes.append(node)
@@ -328,6 +392,9 @@ class WorkflowBuilder:
                     target_type=node_type,
                 )
                 edges.append(edge)
+
+        logger.debug(f"Edges: {edges}")
+        logger.debug(f"Nodes: {nodes}")
 
         return {
             "edges": edges,
@@ -388,6 +455,7 @@ class WorkflowFactory:
     async def create_complex_workflow(self, message: str) -> WorkflowGraph:
         """Create a more complex workflow by determining node sequence dynamically"""
         node_sequence = await self.determine_node_sequence(message)
+        logger.info(f"Generated the following node sequence  {node_sequence} ")
         return await self.builder.build_workflow(message, node_sequence)
 
 

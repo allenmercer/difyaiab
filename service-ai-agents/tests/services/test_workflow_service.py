@@ -217,16 +217,15 @@ class TestWorkflowBuilder:
                         "test message", ["start", "end"]
                     )
 
-                    # Verify the result structure
-                    assert "nodes" in result
-                    assert "edges" in result
-                    assert "viewport" in result
+                    assert "nodes" in result["graph"]
+                    assert "edges" in result["graph"]
+                    assert "viewport" in result["graph"]
 
                     # Should have 2 nodes
-                    assert len(result["nodes"]) == 2
+                    assert len(result["graph"]["nodes"]) == 2
 
                     # Should have 1 edge
-                    assert len(result["edges"]) == 1
+                    assert len(result["graph"]["edges"]) == 1
 
                     # Verify processor calls
                     mock_start.assert_awaited_once()
@@ -286,6 +285,7 @@ class TestNodeProcessors:
                 node_id="test-id",
                 position={"x": 100, "y": 100},
                 previous_node_id="http-prev-id",
+                previous_node_type="http_request",
             )
 
             # Verify node structure
@@ -340,6 +340,8 @@ class TestNodeProcessors:
                         message="test message",
                         node_id="test-id",
                         position={"x": 100, "y": 100},
+                        previous_node_id="llm-prev-id",
+                        previous_node_type="llm",
                     )
 
                     # Verify node structure
@@ -371,7 +373,11 @@ class TestNodeProcessors:
 
             processor = HTTPNodeProcessor()
             node = await processor.process(
-                message="test message", node_id="test-id", position={"x": 100, "y": 100}
+                message="test message",
+                node_id="test-id",
+                position={"x": 100, "y": 100},
+                previous_node_id="http-prev-id",
+                previous_node_type="http-request",
             )
 
             # Verify node structure

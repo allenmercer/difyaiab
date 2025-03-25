@@ -8,10 +8,9 @@ class StaticPrompts:
 
       If the user request does not strictly match any of these use cases, respond with "Other."
 
-      Respond strictly in YAML format with the following keys:
+      **Do NOT include any markdown formatting such as triple backticks or code fences.**
 
-      template_choice: <one of the choices above or "Other">
-
+      Only respond with the result (HTTP_Request, LLM, other)
       User request: "{}"
       """
 
@@ -36,24 +35,32 @@ class StaticPrompts:
       User request: "{}"
     """
 
-    GENERATE_APP_NAME_SYSTEM = """You are an AI assistant. Your task is to create a short, human-friendly name based on the user's input. Your response must:
-  - Contain no more than three words total.
-  - Use simple, easy-to-understand words (avoid complex vocabulary).
-  - Include no extra words, explanations, or punctuation (beyond what might be necessary inside the name itself).
-  - Not include any disclaimers, apologies, or greetings.
+    GENERATE_APP_NAME_SYSTEM = """You are an AI assistant tasked with generating a concise, user-friendly name for an app based on the user's description. Your response must:
+    - Always prioritize and use the app name explicitly provided by the user, if given.
+    - If no explicit app name is provided, create a short, descriptive name related only to the workflow's main function.
+    - Exclude any numerical settings or technical details.
+    - Contain no more than three words total.
+    - Use simple, easy-to-understand words.
+    - Include no extra words, explanations, punctuation, disclaimers, apologies, or greetings.
 
-  Follow these instructions exactly."""
+    Follow these instructions exactly."""
 
-    GENERATE_APP_NAME_USER = """Please provide a short, descriptive name for the following workflow:
+    GENERATE_APP_NAME_USER = """Provide a short, descriptive name for the following workflow:
 
-  "{}"
+    "{}"
 
-  Remember:
-  - No more than three words total.
-  - Only respond with the name itself, nothing more.
-  """
+    Important:
+    - If the user explicitly specifies the app's name, respond with exactly that name.
+    - Otherwise, create a short descriptive name (max three words).
+    - Do NOT include numerical or technical details like temperature values.
+    - Only respond with the name itself, nothing more.
+    """
 
-    GENERATE_APP_DESCRIPTION_SYSTEM = """You are an AI assistant specialized in generating workflow descriptions. Your task is to create a valid workflow description based solely on the user's input. Your output must contain only the description, with no additional text, explanations, or formatting."""
+    GENERATE_APP_DESCRIPTION_SYSTEM = """You are an expert at creating clear, concise, and non-technical workflow descriptions suitable for end-users. Based on the user's input, produce a readable description of what the workflow does. Follow these guidelines:
+    - Do NOT include technical details like HTTP methods, headers, JSON structures, or implementation specifics.
+    - Describe the functionality clearly and concisely in user-friendly language.
+
+    Return ONLY the readable workflow description text, with no additional explanations or formatting."""
 
     GENERATE_APP_DESCRIPTION_USER = """Please generate a valid workflow description, no more than 2 sentances based on the following details:
 
@@ -96,18 +103,23 @@ class StaticPrompts:
   If any of these details cannot be determined from the user message, use the default values provided. Return only the Python dictionary, nothing else.
   """
 
-    GENERATE_LLM_PROMPT_SYSTEM = """You are an expert prompt engineer. Your task is to generate a prompt for a large language model (LLM) based on a user's ask. Follow these guidelines:
-    - The output must be only the prompt text for the LLM, with no additional commentary or formatting.
-    - Ensure the generated prompt is concise, unambiguous, and actionable.
+    GENERATE_LLM_PROMPT_SYSTEM = """
+    You are an expert prompt engineer. Your job is to take a user's workflow request and produce a clear, actionable prompt that will be directly sent to an LLM to fulfill the user's intended action.
 
-    Return only the generated LLM prompt text.
+    Important Guidelines:
+    - Do NOT restate the user's request; instead, provide the actionable instruction directly.
+    - Make the prompt specific and clear enough that an LLM can perform exactly what the user asked for.
+    - Ignore references to workflow names, LLM parameters like temperature, or implementation details; only produce the actual task instruction the LLM should execute.
+
+    Return ONLY the prompt text and no additional explanation or commentary.
     """
 
-    GENERATE_LLM_PROMPT_USER = """Based on the following user workflow ask, generate a high level LLM prompt that instructs an LLM to answer the users needs
-
+    GENERATE_LLM_PROMPT_USER = """
+    User workflow request:
     "{}"
 
-    Return only the prompt text for the LLM, with no extra commentary.
+    Generate a concise and actionable prompt for the LLM based on the user's request above.
+    Return ONLY the prompt text.
     """
 
     GENERATE_HTTP_BODY_SYSTEM = """You are an expert model configuration parser. Your task is to generate a Python dictionary (hash) that defines the "data" field for an HTTP Request node exactly with the following structure:
