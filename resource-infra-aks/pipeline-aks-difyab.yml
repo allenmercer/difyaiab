@@ -68,6 +68,11 @@ stages:
                       echo ""
                       echo "Cleaning up files..."
                       rm -rf dify-ai02-ingress_aks.yaml
+                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      DIFYAI_URL_FULL="difyai.$DIFYAI_URL_DOMAIN.com"
+                      echo ""
+                      echo "Add the following line to you hosts file:"
+                      echo "$TRAEFIK_IP $DIFYAI_URL_FULL"
                       echo "Task Successful"
 
   ############################################################
