@@ -43,6 +43,8 @@ stages:
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
+                      ADO_AGENT_IP=$(curl -L ipconfig.me | xargs)
+                      az aks update --name $AZURE_AKSCLUSTER_NAME -g $(AZURE_RG_NAME) --api-server-authorized-ip-ranges "128.85.200.44/32, $ADO_AGENT_IP/32"
                 # Install Traefik Step
                 - task: AzureCLI@2
                   displayName: 'Install Traefik'
@@ -164,6 +166,8 @@ stages:
                       az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
                       cat /home/vsts/.kube/config
                       echo "Kubernetes credential setup successful"
+                      ADO_AGENT_IP=$(curl -L ipconfig.me | xargs)
+                      az aks update --name $AZURE_AKSCLUSTER_NAME -g $(AZURE_RG_NAME) --api-server-authorized-ip-ranges "128.85.200.44/32, $ADO_AGENT_IP/32"
                 # Test hello-world Ingress Step
                 # This test will verify the the hello-world deployment exists and it reachable through a traefik ingress route.
                 # Because hello-world is protected with basic auth, we expect and 401 Unauthorized as the response.
