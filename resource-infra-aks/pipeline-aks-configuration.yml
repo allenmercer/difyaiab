@@ -254,8 +254,8 @@ stages:
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/service-infra-whoami
                       echo ""
                       echo "Deploying docker image to kubernetes..."
-                      sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" infra-whoami01-deployment.yaml > infra-whoami01-deployment_acr.yaml
-                      kubectl apply -f infra-whoami01-deployment_acr.yaml
+                      sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" infra-whoami01-deployment.yaml > infra-whoami01-deployment_aks.yaml
+                      kubectl apply -f infra-whoami01-deployment_aks.yaml
                       echo ""
                       echo "Waiting for containers to pull image..."
                       COUNTER=0
@@ -270,8 +270,8 @@ stages:
                       kubectl get -n service-infra-whoami pods
                       echo ""
                       echo "Cleaning up containers and files..."
-                      kubectl delete -f infra-whoami01-deployment_acr.yaml
-                      rm -rf infra-whoami01-deployment_acr.yaml
+                      kubectl delete -f infra-whoami01-deployment_aks.yaml
+                      rm -rf infra-whoami01-deployment_aks.yaml
                       echo "Stage Successful"
 
 ############################################################

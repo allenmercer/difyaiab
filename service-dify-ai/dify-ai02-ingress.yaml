@@ -20,7 +20,7 @@ spec:
     - web
 
   routes:
-    - match: Host(`difyai.difyabdevuseast2001.com`)
+    - match: Host(`difyai.__DIFYAI_URL_DOMAIN__.com`)
       kind: Rule
       middlewares:
         - name: middleware-dify-ai-ipallowlist

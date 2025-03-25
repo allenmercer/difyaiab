@@ -1,0 +1,75 @@
+# Stage to Deploy Dify Agent Builder
+stages:
+  ############################################################
+  ### Stage to Deploy Dify Agent Builder                   ###
+  ############################################################
+  - stage: deployDifyAgentBuilder
+    # The stage displayName is not displayed in ADO but can be used for documentation purposes.
+    displayName: 'Deploy Dify Agent Builder'
+    #trigger: manual
+    jobs:
+      - deployment: deployDifyAgentBuilder
+        # The deployment displayName is displayed in ADO under Jobs.
+        displayName: 'Deploy Dify Agent Builder'
+        pool:
+          vmImage: 'ubuntu-latest'
+        # This is the environment in ADO where the results of this job will be displayed.
+        environment: 'adoenv-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Checkout GitHub Repository
+                - checkout: self
+                  # dispalyName: 'Checkout GitHub Repository'
+                # Azure Resource Login Step.
+                - task: AzureCLI@2
+                  # The step display name will be displayed in ADO in the DOS window in light green.
+                  displayName: 'Azure Resource Login'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo "Azure login successful"
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      AZURE_AKSCLUSTER_NAME="aks-$(AZURE_PROJECT_NAME)-$(AZURE_PROJECT_LE)-$(AZURE_RG_LOCATION)-$(AZURE_PROJECT_INSTANCE)"
+                      az aks get-credentials --admin --name $AZURE_AKSCLUSTER_NAME --resource-group $(AZURE_RG_NAME)
+                      cat /home/vsts/.kube/config
+                      echo "Kubernetes credential setup successful"
+                      ADO_AGENT_IP=$(curl -L ipconfig.me | xargs)
+                      az aks update --name $AZURE_AKSCLUSTER_NAME -g $(AZURE_RG_NAME) --api-server-authorized-ip-ranges "128.85.200.44/32, $ADO_AGENT_IP/32"
+                # Deploy Dify AI
+                - task: AzureCLI@2
+                  displayName: 'Deploy Dify AI'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying Dify AI..."
+                      # Deploy Dify AI
+                      cd service-dify-ai
+                      echo ""
+                      echo "Deploying Dify AI kubernetes..."
+                      kubectl apply -f dify-ai01-deployment.yaml
+                      echo ""
+                      echo "Deploying Dify AI ingress route to kubernetes..."
+                      DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" dify-ai02-ingress.yaml > dify-ai02-ingress_aks.yaml
+                      kubectl apply -f dify-ai02-ingress_aks.yaml
+                      echo ""
+                      echo "Cleaning up files..."
+                      rm -rf dify-ai02-ingress_aks.yaml
+                      echo "Task Successful"
+
+  ############################################################
+  ### END Stage to Deploy Dify Agent Builder               ###
+  ############################################################
