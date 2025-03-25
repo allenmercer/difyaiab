@@ -197,7 +197,7 @@ stages:
                       set -e  # Fail if any command fails
                       echo "Testing Build Push Pull and Deploy..."
                       # Test Build Push Pull and Deploy
-                      cd $(REPO_SVCINFRAWHOAMI_FOLDER)
+                      cd $(REPO_KUBMANIFEST_FOLDER)/service-infra-whoami
                         ### This is now done with a Role Binding in Terraform ###
                         #echo ""
                         #echo "Connecting AKS Cluster to Container Registry"
