@@ -255,7 +255,7 @@ stages:
                       echo ""
                       echo "Deploying docker image to kubernetes..."
                       sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" infra-whoami01-deployment.yaml > infra-whoami01-deployment_acr.yaml
-                      kubectl apply -f deployment_acr.yaml
+                      kubectl apply -f infra-whoami01-deployment_acr.yaml
                       echo ""
                       echo "Waiting for containers to pull image..."
                       COUNTER=0
