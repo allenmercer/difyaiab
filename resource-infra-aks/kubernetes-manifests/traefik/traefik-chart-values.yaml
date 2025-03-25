@@ -20,6 +20,31 @@ autoscaling:
           type: Utilization
           averageUtilization: 80
 
+service:
+  spec:
+    externalTrafficPolicy: Local  # Preserve IP from LB to AKS
+
+ports:
+  web:
+    forwardedHeaders:
+      # -- Trust forwarded headers information (X-Forwarded-*).
+      trustedIPs:
+        - '127.0.0.1/32'
+        - '192.168.1.1/24'
+        - '10.0.0.0/8'
+        - '172.16.0.0/12'
+        - '128.85.200.44/32'
+      insecure: false
+    proxyProtocol:
+      # -- Enable the Proxy Protocol header parsing for the entry point
+      trustedIPs:
+        - '127.0.0.1/32'
+        - '192.168.1.1/24'
+        - '10.0.0.0/8'
+        - '172.16.0.0/12'
+        - '128.85.200.44/32'
+      insecure: false
+
 ingressRoute:
   dashboard:
     matchRule: Host(`localhost`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))

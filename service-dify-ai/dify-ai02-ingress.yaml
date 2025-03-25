@@ -2,10 +2,10 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: middleware-dify-ai-ipwhitelist
+  name: middleware-dify-ai-ipallowlist
   namespace: dify
 spec:
-  ipWhiteList:
+  ipAllowList:
     sourceRange:
       - 128.85.200.44/32
 ---
@@ -23,7 +23,7 @@ spec:
     - match: Host(`difyai.difyabdevuseast2001.com`)
       kind: Rule
       middlewares:
-        - name: middleware-dify-ai-ipwhitelist
+        - name: middleware-dify-ai-ipallowlist
           namespace: dify
       services:
         - name: dify-nginx
