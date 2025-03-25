@@ -227,7 +227,7 @@ stages:
                       echo ""
                       echo "Testing docker image..."
                       COUNTER=0
-                      DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoam || true) | jq -r '.[0].State.Status' | xargs)
+                      DOCKER_WHOAMI_STATUS=$((docker container inspect service-infra-whoami || true) | jq -r '.[0].State.Status' | xargs)
                       until [[ $DOCKER_WHOAMI_STATUS == "running" ]]; do
                         if [ "$COUNTER" -ge 24 ]; then exit 1; fi
                         echo "    Waiting for docker whoami container..."
@@ -237,7 +237,7 @@ stages:
                       done
                       docker container ls
                       curl --connect-timeout 15 --max-time 30 http://localhost:8080
-                      curl -s  --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
                       echo ""
                       echo "Stopping docker image..."
                       docker container ls

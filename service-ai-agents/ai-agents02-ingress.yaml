@@ -1,0 +1,32 @@
+# The AI Agent API does not need to be exposed throug an ingress route in production.
+# Addin this for testing purposes.
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: middleware-ai-agents-ipallowlist
+  namespace: difyab
+spec:
+  ipAllowList:
+    sourceRange:
+      - 128.85.200.44/32
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ingress-ai-agents
+  namespace: difyab
+spec:
+  entryPoints:
+    - web
+
+  routes:
+    - match: Host(`abapi.__DIFYAI_URL_DOMAIN__.com`)
+      kind: Rule
+      middlewares:
+        - name: middleware-ai-agents-ipallowlist
+          namespace: difyab
+      services:
+        - name: service-cip-difyab-api
+          port: 80
+          namespace: difyab

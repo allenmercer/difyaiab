@@ -10,6 +10,9 @@ RUN pip install --no-cache-dir poetry
 COPY ./service-ai-agents /app/service-ai-agents
 COPY ./core /app/core
 
+# Copy the ado_build_version file to the container
+COPY ./service-ai-agents/ado_build_version.txt .
+
 WORKDIR /app/service-ai-agents
 
 # Configure Poetry to install packages into the global environment

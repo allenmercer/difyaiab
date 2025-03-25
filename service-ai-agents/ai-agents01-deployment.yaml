@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-difyaiab-be
-  namespace: difyaiab
+  name: deployment-difyab-api
+  namespace: difyab
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: difyaiab-be
+      app: difyab-api
   template:
     metadata:
       labels:
-        app: difyaiab-be
+        app: difyab-api
     spec:
       containers:
-        - name: difyaiab-be
-          image: crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-be:latest
+        - name: difyab-api
+          image: crdifyaipoc001.azurecr.io/v2/dify-poc/difyab-api:latest
           env:
             - name: LLM_API_KEY
               value: 6ccab1fbe41d4194b7bde6d99fb05965
