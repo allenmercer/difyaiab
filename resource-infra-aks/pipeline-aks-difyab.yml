@@ -187,8 +187,10 @@ stages:
                       echo "    BuildID: $(Build.BuildId)"
                       echo $(Build.BuildId) > ado_build_version.txt
                       docker build \
-                      --build-arg VITE_BACKEND=http://service-cip-difyab-api:80 \
-                      --build-arg VITE_WEBSOCKET_BACKEND=ws://service-cip-difyab-api:80 \
+                      #--build-arg VITE_BACKEND=http://service-cip-difyab-api:80 \
+                      #--build-arg VITE_WEBSOCKET_BACKEND=ws://service-cip-difyab-api:80 \
+                      --build-arg VITE_BACKEND=http://abapi.difyabdeveastus2001.com:80 \
+                      --build-arg VITE_WEBSOCKET_BACKEND=ws://abapi.difyabdeveastus2001.com:80 \
                       --build-arg VITE_DIFY_EMBED=http://difyai.difyabdeveastus2001.com/ \
                       --build-arg VITE_EMAIL=danny@danny.com \
                       --build-arg VITE_PASSWORD="4#@imWt!A#epj5i!Hnx&RinsrWrmSH4X4Mv6A&gr&%XJ" \
