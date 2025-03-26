@@ -4,7 +4,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: middleware-ai-agents-ipallowlist
+  name: middleware-difyab-api-ipallowlist
   namespace: difyab
 spec:
   ipAllowList:
@@ -14,7 +14,7 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: ingress-ai-agents
+  name: ingress-difyab-api
   namespace: difyab
 spec:
   entryPoints:
@@ -24,7 +24,7 @@ spec:
     - match: Host(`abapi.__DIFYAI_URL_DOMAIN__.com`)
       kind: Rule
       middlewares:
-        - name: middleware-ai-agents-ipallowlist
+        - name: middleware-difyab-api-ipallowlist
           namespace: difyab
       services:
         - name: service-cip-difyab-api

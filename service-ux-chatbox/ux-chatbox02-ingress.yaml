@@ -2,7 +2,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: middleware-ux-chatbox-ipallowlist
+  name: middleware-difyab-uxc-ipallowlist
   namespace: difyab
 spec:
   ipAllowList:
@@ -12,7 +12,7 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: ingress-ux-chatbox
+  name: ingress-difyab-uxc
   namespace: difyab
 spec:
   entryPoints:
@@ -22,9 +22,9 @@ spec:
     - match: Host(`agentbuilder.__DIFYAI_URL_DOMAIN__.com`)
       kind: Rule
       middlewares:
-        - name: middleware-ux-chatbox-ipallowlist
+        - name: middleware-difyab-uxc-ipallowlist
           namespace: difyab
       services:
-        - name: service-cip-ux-chatbox
+        - name: service-cip-difyab-uxc
           port: 80
           namespace: difyab
