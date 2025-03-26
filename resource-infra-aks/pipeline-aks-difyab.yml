@@ -98,7 +98,7 @@ stages:
                       echo ""
                       echo "Running Dify Agent Builder API docker image..."
                       docker run -d --name difyab-api -p 8080:8000 \
-                      -e LLM_API_KEY=6ccab1fbe41d4194b7bde6d99fb05965 \
+                      -e LLM_API_KEY=$(API_LLM_API_KEY) \
                       -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
                       -e LLM_MODEL=gpt-4o \
                       -e LLM_API_VERSION=2024-10-21 \
@@ -192,7 +192,7 @@ stages:
                       --build-arg VITE_WEBSOCKET_BACKEND=ws://abapi.difyabdeveastus2001.com:80 \
                       --build-arg VITE_DIFY_EMBED=http://difyai.difyabdeveastus2001.com/ \
                       --build-arg VITE_EMAIL=danny@danny.com \
-                      --build-arg VITE_PASSWORD="4#@imWt!A#epj5i!Hnx&RinsrWrmSH4X4Mv6A&gr&%XJ" \
+                      --build-arg VITE_PASSWORD="$(UXC_VITE_PASSWORD)" \
                       -t difyab-uxc .
                       echo ""
                       echo "List docker images and build number..."
