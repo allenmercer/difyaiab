@@ -108,18 +108,20 @@ stages:
                       echo ""
                       echo "Testing Dify Agent Builder API docker image..."
                       COUNTER=0
-                      DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
-                      until [[ $DOCKER_DIFYABAPI_STATUS == "running" ]]; do
+                      #DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
+                      DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
+                      until [[ $DOCKER_DIFYABAPI_STATUS == "200" ]]; do
                         if [ "$COUNTER" -ge 24 ]; then exit 1; fi
                         echo "    Waiting for docker difyab-api container..."
                         sleep 5
                         COUNTER=$[$COUNTER +1]
-                        DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
+                      #  DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
+                        DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
                       done
                       docker container ls
-                      sleep 10
+                      #sleep 10
                       curl --connect-timeout 15 --max-time 30 http://localhost:8080
-                      curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      #curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
                       echo ""
                       echo "Stopping Dify Agent Builder API docker image..."
                       docker container ls
@@ -134,6 +136,9 @@ stages:
                       echo "Pushing Dify Agent Builder API docker image..."
                       docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-api
+                      echo ""
+                      echo "Deploying Dify Agent Builder Namespace to kubernetes..."
+                      kubectl apply -f service-ai-agents/ai-agents00-namespace.yaml
                       echo ""
                       echo "Deploying Dify Agent Builder API to kubernetes..."
                       sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" service-ai-agents/ai-agents01-deployment.yaml > service-ai-agents/ai-agents01-deployment_aks.yaml
