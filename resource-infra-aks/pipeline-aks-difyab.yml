@@ -117,6 +117,7 @@ stages:
                         DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
                       done
                       docker container ls
+                      sleep 10
                       curl --connect-timeout 15 --max-time 30 http://localhost:8080
                       curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
                       echo ""
