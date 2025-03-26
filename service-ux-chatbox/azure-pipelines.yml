@@ -1,0 +1,164 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Define Variables
+variables:
+  - group: arm-variables
+  - name: POC_ENVIRONMENT
+    value: poc
+  - name: APP_NAME
+    value: service-ux-chatbox
+
+stages:
+  - stage: buildAndPushDockerImage
+    displayName: 'Build and Push Docker Image'
+    trigger: manual
+    jobs:
+      - deployment: buildAndPushDockerImage
+        displayName: 'Build and Push Docker Image'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(POC_ENVIRONMENT)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Must reclone repo.
+                - checkout: self
+
+                # Login to all services
+                - task: AzureCLI@2
+                  inputs:
+                    #azureSubscription: 'AZRM_difyai-agent-builder-poc_Service_Connection'
+                    azureSubscription: 'global_azdo_dev'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo ""
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo ""
+                      echo "Get ADO Runner IP..."
+                      RUNNER_IP_ADDR=$(curl -L ipconfig.me)
+                      echo "    Runner Addr: $RUNNER_IP_ADDR"
+                      echo "ADO runner IP completed"
+                      echo "Setting up Kubernetes credentials..."
+                      az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
+                      cat /home/vsts/.kube/config
+                      echo ""
+                      echo "Logging into Azure Container Registry..."
+                      docker login https://crdifyaipoc001.azurecr.io -u $(az acr credential show -n crdifyaipoc001 | jq -r '.username') -p $(az acr credential show -n crdifyaipoc001 | jq -r '.passwords[0]|.value')
+                      echo "List Files"
+                      pwd
+                      ls
+                      echo ""
+                      echo "Building docker image and pushing to registry..."
+                      cd service-ux-chatbox
+                      echo $(Build.BuildId) > version.txt
+                      docker build \
+                      --build-arg VITE_BACKEND=http://service-cip-difyaiab-be:80 \
+                      --build-arg VITE_WEBSOCKET_BACKEND=ws://service-cip-difyaiab-be:80 \
+                      --build-arg VITE_DIFY_EMBED=http://9.169.178.137/ \
+                      --build-arg VITE_EMAIL=danny@danny.com \
+                      --build-arg VITE_PASSWORD="4#@imWt!A#epj5i!Hnx&RinsrWrmSH4X4Mv6A&gr&%XJ" \
+                      -t difyaiab-fe .
+                      echo ""
+                      echo "List docker images and build number..."
+                      docker image ls
+                      echo $(Build.BuildId)
+                      echo ""
+                      echo "Running docker image..."
+
+                      docker run -d -p 5000:5000 \
+                      difyaiab-fe
+                      #docker run -d -p 8080:8000 service-ai-agents
+                      echo ""
+                      echo "Testing docker image..."
+                      sleep 5
+                      docker container ls
+                      curl http://localhost:5000
+                      curl -s  http://localhost:5000 -o /dev/null -w '%{http_code}' | grep 200
+                      echo ""
+                      echo "Stopping docker image..."
+                      docker container ls
+                      docker container rm $(docker container ls | grep difyaiab-fe | awk '{print $1}') --force
+                      echo ""
+                      echo "Tagging docker image..."
+                      docker tag difyaiab-fe crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-fe:1.1.$(Build.BuildId)
+                      docker tag difyaiab-fe crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-fe:latest
+                      echo ""
+                      echo "Pushing docker image..."
+                      docker push --all-tags crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-fe
+                      echo ""
+                      echo "Stage Successful"
+                  displayName: 'Build and Push Docker Image'
+
+  - stage: pullandDeploy
+    displayName: 'Pull and Deploy Docker Image'
+    trigger: manual
+    jobs:
+      - deployment: pullandDeploy
+        displayName: 'Pull and Deploy Docker Image'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(POC_ENVIRONMENT)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Must reclone repo.
+                - checkout: self
+
+                # Login to all services
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: 'global_azdo_dev'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo ""
+                      echo "Logging into Azure..."
+                      az login --service-principal --username "$(AZURE_CLIENT_ID)" --password "$(AZURE_CLIENT_SECRET)" --tenant "$(AZURE_TENANT_ID)"
+                      az account set --subscription "$(AZURE_SUBSCRIPTION_ID)"
+                      az account show
+                      echo ""
+                      echo "Setting up Kubernetes credentials..."
+                      #echo "" > /home/vsts/.kube/config
+                      az aks get-credentials --admin --name difyai-agent-builder-poc-cluster --resource-group difyai-agent-builder-poc
+                      echo ""
+                      echo "Kube Config File"
+                      cat /home/vsts/.kube/config
+                      echo ""
+                      echo "Contexts"
+                      kubectl config get-contexts
+                      echo ""
+                      echo "Logging into Azure Container Registry..."
+                      docker login https://crdifyaipoc001.azurecr.io -u $(az acr credential show -n crdifyaipoc001 | jq -r '.username') -p $(az acr credential show -n crdifyaipoc001 | jq -r '.passwords[0]|.value')
+                      echo "List Files"
+                      pwd
+                      ls -al
+                      #ls -al work
+                      cd service-ux-chatbox
+                      echo ""
+                      echo "Get kubernetes namespaces..."
+                      kubectl version
+                      kubectl get ns
+                      echo ""
+                      #echo "Delete old resources..."
+                      #kubectl delete -f deployment.yaml
+                      #echo ""
+                      echo "Deploy kubernetes resources..."
+                      kubectl apply -f deployment.yaml
+                      echo ""
+                      echo "Get service ip..."
+                      kubectl get service -n difyaiab
+                      echo ""
+                      echo "Stage Successful"
+                  displayName: 'Pull and Deploy Docker Image'

@@ -136,6 +136,13 @@ stages:
                       echo "Pushing Dify Agent Builder API docker image..."
                       docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
                       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-api
+                      # Check if the deployment already exists.  If it does, we will perform a rollout restart after we apply the yaml files.
+                      if kubectl get -n difyab deployments.apps --no-headers | grep deployment-difyab-api; then
+                        DIFYAB_API_EXISTS=yes
+                      else
+                        DIFYAB_API_EXISTS=no
+                      fi
+                      # Apply the yaml files whether or not the deployment already existed, just in case there are any changes.
                       echo ""
                       echo "Deploying Dify Agent Builder Namespace to kubernetes..."
                       kubectl apply -f service-ai-agents/ai-agents00-namespace.yaml
@@ -144,10 +151,19 @@ stages:
                       sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" service-ai-agents/ai-agents01-deployment.yaml > service-ai-agents/ai-agents01-deployment_aks.yaml
                       kubectl apply -f service-ai-agents/ai-agents01-deployment_aks.yaml
                       echo ""
-                      echo "Deploying Dify Agent Builder ingress route to kubernetes..."
+                      echo "Deploying Dify Agent Builder API ingress route to kubernetes..."
                       DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" service-ai-agents/ai-agents02-ingress.yaml > service-ai-agents/ai-agents02-ingress_aks.yaml
                       kubectl apply -f service-ai-agents/ai-agents02-ingress_aks.yaml
+                      if [ $DIFYAB_API_EXISTS == "yes" ]; then
+                        echo ""
+                        echo "Rolling out new version of Dify Agent Builder API to kubernetes cluster..."
+                        DIFYAB_API_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-api-5bbf8cbf8c-nkrm2 | awk '{ print $1 }' | xargs)
+                        DIFYAB_API_VER=$(kubectl exec -n difyab pods/$DIFYAB_API_POD -- cat ado_build_version.txt)
+                        echo "    Dify Agent Builder Current Version: $DIFYAB_API_VER"
+                        kubectl rollout restart -n difyab deployment deployment-difyab-api
+                        echo "    Rollout to new version triggered."
+                      fi
                       echo ""
                       echo "Cleaning up files..."
                       rm -rf service-ai-agents/ai-agents01-deployment_aks.yaml

@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-difyaiab-fe
+  namespace: difyaiab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: difyaiab-fe
+  template:
+    metadata:
+      labels:
+        app: difyaiab-fe
+    spec:
+      containers:
+        - name: difyaiab-fe
+          image: crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-fe:latest
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '256Mi'
+          ports:
+            - containerPort: 5000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-difyaiab-fe
+  namespace: difyaiab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deployment-difyaiab-fe
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-lb-difyaiab-fe
+  namespace: difyaiab
+spec:
+  selector:
+    app: difyaiab-fe
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-cip-difyaiab-fe
+  namespace: difyaiab
+spec:
+  selector:
+    app: difyaiab-fe
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 600
