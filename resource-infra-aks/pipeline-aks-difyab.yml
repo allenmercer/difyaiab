@@ -45,130 +45,130 @@ stages:
                       echo "Kubernetes credential setup successful"
                       ADO_AGENT_IP=$(curl -L ipconfig.me | xargs)
                       az aks update --name $AZURE_AKSCLUSTER_NAME -g $(AZURE_RG_NAME) --api-server-authorized-ip-ranges "128.85.200.44/32, $ADO_AGENT_IP/32"
-                # # Deploy Dify AI
-                # - task: AzureCLI@2
-                #   displayName: 'Deploy Dify AI'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Deploying Dify AI..."
-                #       # Deploy Dify AI
-                #       cd service-dify-ai
-                #       echo ""
-                #       echo "Deploying Dify AI kubernetes..."
-                #       kubectl apply -f dify-ai01-deployment.yaml
-                #       echo ""
-                #       echo "Deploying Dify AI ingress route to kubernetes..."
-                #       DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                #       sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" dify-ai02-ingress.yaml > dify-ai02-ingress_aks.yaml
-                #       kubectl apply -f dify-ai02-ingress_aks.yaml
-                #       echo ""
-                #       echo "Cleaning up files..."
-                #       rm -rf dify-ai02-ingress_aks.yaml
-                #       TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
-                #       DIFYAI_URL_FULL="difyai.$DIFYAI_URL_DOMAIN.com"
-                #       echo ""
-                #       echo "Add the following line to you hosts file:"
-                #       echo "$TRAEFIK_IP $DIFYAI_URL_FULL"
-                #       echo "Task Successful"
-                # # Deploy Dify Agent Builder API
-                # - task: AzureCLI@2
-                #   displayName: 'Deploy Dify Agent Builder API'
-                #   inputs:
-                #     azureSubscription: '$(AZURE_SERVICE_SPN)'
-                #     scriptType: 'bash'
-                #     scriptLocation: 'inlineScript'
-                #     inlineScript: |
-                #       set -e  # Fail if any command fails
-                #       echo "Deploying Dify Agent Builder API..."
-                #       # Deploy Dify Agent Builder API
-                #       echo ""
-                #       echo "Building Dify Agent Builder API docker image..."
-                #       echo "    BuildID: $(Build.BuildId)"
-                #       # Updated service-ai-agents Dockerfile to copy this file to the container image.
-                #       echo $(Build.BuildId) > service-ai-agents/ado_build_version.txt
-                #       docker build -f service-ai-agents/Dockerfile -t difyab-api .
-                #       echo ""
-                #       echo "List docker images and build number..."
-                #       docker image ls
-                #       echo $(Build.BuildId)
-                #       echo ""
-                #       echo "Running Dify Agent Builder API docker image..."
-                #       docker run -d --name difyab-api -p 8080:8000 \
-                #       -e LLM_API_KEY=6ccab1fbe41d4194b7bde6d99fb05965 \
-                #       -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
-                #       -e LLM_MODEL=gpt-4o \
-                #       -e LLM_API_VERSION=2024-10-21 \
-                #       -e DIFY_BACKEND=http://dify-nginx.diffy \
-                #       difyab-api
-                #       #docker run -d -p 8080:8000 difyab-api
-                #       echo ""
-                #       echo "Testing Dify Agent Builder API docker image..."
-                #       COUNTER=0
-                #       #DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
-                #       DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
-                #       until [[ $DOCKER_DIFYABAPI_STATUS == "200" ]]; do
-                #         if [ "$COUNTER" -ge 24 ]; then exit 1; fi
-                #         echo "    Waiting for docker difyab-api container..."
-                #         sleep 5
-                #         COUNTER=$[$COUNTER +1]
-                #       #  DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
-                #         DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
-                #       done
-                #       docker container ls
-                #       #sleep 10
-                #       curl --connect-timeout 15 --max-time 30 http://localhost:8080
-                #       #curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
-                #       echo ""
-                #       echo "Stopping Dify Agent Builder API docker image..."
-                #       docker container ls
-                #       docker container rm $(docker container ls | grep difyab-api | awk '{print $1}') --force
-                #       echo ""
-                #       echo "Tagging Dify Agent Builder API docker image..."
-                #       AZURE_CR_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                #       AZURE_CR_URL=$(az acr show --resource-group $AZURE_RG_NAME --name $AZURE_CR_NAME | jq -r '.loginServer' | xargs)
-                #       docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:1.1.$(Build.BuildId)
-                #       docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:latest
-                #       echo ""
-                #       echo "Pushing Dify Agent Builder API docker image..."
-                #       docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
-                #       docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-api
-                #       # Check if the deployment already exists.  If it does, we will perform a rollout restart after we apply the yaml files.
-                #       if kubectl get -n difyab deployments.apps --no-headers | grep deployment-difyab-api; then
-                #         DIFYAB_API_EXISTS=yes
-                #       else
-                #         DIFYAB_API_EXISTS=no
-                #       fi
-                #       # Apply the yaml files whether or not the deployment already existed, just in case there are any changes.
-                #       echo ""
-                #       echo "Deploying Dify Agent Builder Namespace to kubernetes..."
-                #       kubectl apply -f service-ai-agents/ai-agents00-namespace.yaml
-                #       echo ""
-                #       echo "Deploying Dify Agent Builder API to kubernetes..."
-                #       sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" service-ai-agents/ai-agents01-deployment.yaml > service-ai-agents/ai-agents01-deployment_aks.yaml
-                #       kubectl apply -f service-ai-agents/ai-agents01-deployment_aks.yaml
-                #       echo ""
-                #       echo "Deploying Dify Agent Builder API ingress route to kubernetes..."
-                #       DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                #       sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" service-ai-agents/ai-agents02-ingress.yaml > service-ai-agents/ai-agents02-ingress_aks.yaml
-                #       kubectl apply -f service-ai-agents/ai-agents02-ingress_aks.yaml
-                #       if [ $DIFYAB_API_EXISTS == "yes" ]; then
-                #         echo ""
-                #         echo "Rolling out new version of Dify Agent Builder API to kubernetes cluster..."
-                #         DIFYAB_API_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-api | head -n1 | awk '{ print $1 }' | xargs)
-                #         DIFYAB_API_VER=$(kubectl exec -n difyab pods/$DIFYAB_API_POD -- cat ado_build_version.txt)
-                #         echo "    Dify Agent Builder API Current Version: $DIFYAB_API_VER"
-                #         kubectl rollout restart -n difyab deployment deployment-difyab-api
-                #         echo "    Rollout to new version triggered.  New version will be available soon."
-                #       fi
-                #       echo ""
-                #       echo "Cleaning up files..."
-                #       rm -rf service-ai-agents/ai-agents01-deployment_aks.yaml
-                #       rm -rf service-ai-agents/ai-agents02-ingress_aks.yaml
-                #       echo "Task Successful"
+                # Deploy Dify AI
+                - task: AzureCLI@2
+                  displayName: 'Deploy Dify AI'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying Dify AI..."
+                      # Deploy Dify AI
+                      cd service-dify-ai
+                      echo ""
+                      echo "Deploying Dify AI kubernetes..."
+                      kubectl apply -f dify-ai01-deployment.yaml
+                      echo ""
+                      echo "Deploying Dify AI ingress route to kubernetes..."
+                      DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" dify-ai02-ingress.yaml > dify-ai02-ingress_aks.yaml
+                      kubectl apply -f dify-ai02-ingress_aks.yaml
+                      echo ""
+                      echo "Cleaning up files..."
+                      rm -rf dify-ai02-ingress_aks.yaml
+                      TRAEFIK_IP=$(kubectl get service -n traefik | grep traefik | grep LoadBalancer | awk '{print $4}' | xargs)
+                      DIFYAI_URL_FULL="difyai.$DIFYAI_URL_DOMAIN.com"
+                      echo ""
+                      echo "Add the following line to you hosts file:"
+                      echo "$TRAEFIK_IP $DIFYAI_URL_FULL"
+                      echo "Task Successful"
+                # Deploy Dify Agent Builder API
+                - task: AzureCLI@2
+                  displayName: 'Deploy Dify Agent Builder API'
+                  inputs:
+                    azureSubscription: '$(AZURE_SERVICE_SPN)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e  # Fail if any command fails
+                      echo "Deploying Dify Agent Builder API..."
+                      # Deploy Dify Agent Builder API
+                      echo ""
+                      echo "Building Dify Agent Builder API docker image..."
+                      echo "    BuildID: $(Build.BuildId)"
+                      # Updated service-ai-agents Dockerfile to copy this file to the container image.
+                      echo $(Build.BuildId) > service-ai-agents/ado_build_version.txt
+                      docker build -f service-ai-agents/Dockerfile -t difyab-api .
+                      echo ""
+                      echo "List docker images and build number..."
+                      docker image ls
+                      echo $(Build.BuildId)
+                      echo ""
+                      echo "Running Dify Agent Builder API docker image..."
+                      docker run -d --name difyab-api -p 8080:8000 \
+                      -e LLM_API_KEY=6ccab1fbe41d4194b7bde6d99fb05965 \
+                      -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
+                      -e LLM_MODEL=gpt-4o \
+                      -e LLM_API_VERSION=2024-10-21 \
+                      -e DIFY_BACKEND=http://dify-nginx.diffy \
+                      difyab-api
+                      #docker run -d -p 8080:8000 difyab-api
+                      echo ""
+                      echo "Testing Dify Agent Builder API docker image..."
+                      COUNTER=0
+                      #DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
+                      DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
+                      until [[ $DOCKER_DIFYABAPI_STATUS == "200" ]]; do
+                        if [ "$COUNTER" -ge 24 ]; then exit 1; fi
+                        echo "    Waiting for docker difyab-api container..."
+                        sleep 5
+                        COUNTER=$[$COUNTER +1]
+                      #  DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
+                        DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
+                      done
+                      docker container ls
+                      #sleep 10
+                      curl --connect-timeout 15 --max-time 30 http://localhost:8080
+                      #curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      echo ""
+                      echo "Stopping Dify Agent Builder API docker image..."
+                      docker container ls
+                      docker container rm $(docker container ls | grep difyab-api | awk '{print $1}') --force
+                      echo ""
+                      echo "Tagging Dify Agent Builder API docker image..."
+                      AZURE_CR_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      AZURE_CR_URL=$(az acr show --resource-group $AZURE_RG_NAME --name $AZURE_CR_NAME | jq -r '.loginServer' | xargs)
+                      docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:1.1.$(Build.BuildId)
+                      docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:latest
+                      echo ""
+                      echo "Pushing Dify Agent Builder API docker image..."
+                      docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
+                      docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-api
+                      # Check if the deployment already exists.  If it does, we will perform a rollout restart after we apply the yaml files.
+                      if kubectl get -n difyab deployments.apps --no-headers | grep deployment-difyab-api; then
+                        DIFYAB_API_EXISTS=yes
+                      else
+                        DIFYAB_API_EXISTS=no
+                      fi
+                      # Apply the yaml files whether or not the deployment already existed, just in case there are any changes.
+                      echo ""
+                      echo "Deploying Dify Agent Builder Namespace to kubernetes..."
+                      kubectl apply -f service-ai-agents/ai-agents00-namespace.yaml
+                      echo ""
+                      echo "Deploying Dify Agent Builder API to kubernetes..."
+                      sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" service-ai-agents/ai-agents01-deployment.yaml > service-ai-agents/ai-agents01-deployment_aks.yaml
+                      kubectl apply -f service-ai-agents/ai-agents01-deployment_aks.yaml
+                      echo ""
+                      echo "Deploying Dify Agent Builder API ingress route to kubernetes..."
+                      DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
+                      sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" service-ai-agents/ai-agents02-ingress.yaml > service-ai-agents/ai-agents02-ingress_aks.yaml
+                      kubectl apply -f service-ai-agents/ai-agents02-ingress_aks.yaml
+                      if [ $DIFYAB_API_EXISTS == "yes" ]; then
+                        echo ""
+                        echo "Rolling out new version of Dify Agent Builder API to kubernetes cluster..."
+                        DIFYAB_API_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-api | head -n1 | awk '{ print $1 }' | xargs)
+                        DIFYAB_API_VER=$(kubectl exec -n difyab pods/$DIFYAB_API_POD -- cat ado_build_version.txt)
+                        echo "    Dify Agent Builder API Current Version: $DIFYAB_API_VER"
+                        kubectl rollout restart -n difyab deployment deployment-difyab-api
+                        echo "    Rollout to new version triggered.  New version will be available soon."
+                      fi
+                      echo ""
+                      echo "Cleaning up files..."
+                      rm -rf service-ai-agents/ai-agents01-deployment_aks.yaml
+                      rm -rf service-ai-agents/ai-agents02-ingress_aks.yaml
+                      echo "Task Successful"
 
                 # Deploy Dify Agent Builder UX Chatbox
                 - task: AzureCLI@2
