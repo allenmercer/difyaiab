@@ -1,0 +1,97 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-difyab-api
+  namespace: difyab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: difyab-api
+  template:
+    metadata:
+      labels:
+        app: difyab-api
+    spec:
+      containers:
+        - name: difyab-api
+          image: __AZURE_CR_URL__/v2/dify-poc/difyab-api:latest
+          env:
+            - name: LLM_API_KEY
+              value: 6ccab1fbe41d4194b7bde6d99fb05965
+            - name: LLM_URL
+              value: https://ank-ai-dev.openai.azure.com/
+            - name: LLM_MODEL
+              value: gpt-4o
+            - name: LLM_API_VERSION
+              value: 2024-10-21
+            - name: DIFY_BACKEND
+              value: http://dify-nginx.dify
+          resources:
+            requests:
+              cpu: '750m' # 250
+              memory: '384Mi' # 128
+            limits:
+              cpu: '1500m' # 500
+              memory: '768Mi' # 256
+          ports:
+            - containerPort: 8000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-difyab-api
+  namespace: difyab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deployment-difyab-api
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: service-lb-difyaiab-be
+#   namespace: difyaiab
+# spec:
+#   selector:
+#     app: difyaiab-be
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 8000
+#   type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-cip-difyab-api
+  namespace: difyab
+spec:
+  selector:
+    app: difyab-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+  # sessionAffinity: ClientIP
+  # sessionAffinityConfig:
+  #   clientIP:
+  #     timeoutSeconds: 600

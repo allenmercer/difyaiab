@@ -160,7 +160,7 @@ stages:
                         echo "Rolling out new version of Dify Agent Builder API to kubernetes cluster..."
                         DIFYAB_API_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-api | head -n1 | awk '{ print $1 }' | xargs)
                         DIFYAB_API_VER=$(kubectl exec -n difyab pods/$DIFYAB_API_POD -- cat ado_build_version.txt)
-                        echo "    Dify Agent Builder Current Version: $DIFYAB_API_VER"
+                        echo "    Dify Agent Builder API Current Version: $DIFYAB_API_VER"
                         kubectl rollout restart -n difyab deployment deployment-difyab-api
                         echo "    Rollout to new version triggered.  New version will be available soon."
                       fi
@@ -170,102 +170,93 @@ stages:
                       rm -rf service-ai-agents/ai-agents02-ingress_aks.yaml
                       echo "Task Successful"
 
-                  # Deploy Dify Agent Builder FE
+                  # Deploy Dify Agent Builder UX Chatbox
                 - task: AzureCLI@2
-                  displayName: 'Deploy Dify Agent Builder FE'
+                  displayName: 'Deploy Dify Agent Builder UX Chatbox'
                   inputs:
                     azureSubscription: '$(AZURE_SERVICE_SPN)'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                       set -e  # Fail if any command fails
-                      echo "Deploying Dify Agent Builder FE..."
-                      # Deploy Dify Agent Builder FE
+                      echo "Deploying Dify Agent Builder UX Chatbox..."
+                      # Deploy Dify Agent Builder UX Chatbox
                       cd service-ux-chatbox
-
                       echo ""
-                      echo "Building Dify Agent Builder FE docker image..."
+                      echo "Building Dify Agent Builder UX Chatbox docker image..."
                       echo "    BuildID: $(Build.BuildId)"
-
-                      echo $(Build.BuildId) > service-ux-chatbox/ado_build_version.txt
-                      docker build -f service-ai-agents/Dockerfile -t difyab-api .
+                      echo $(Build.BuildId) > ado_build_version.txt
+                      docker build \
+                      --build-arg VITE_BACKEND=http://service-cip-difyab-api:80 \
+                      --build-arg VITE_WEBSOCKET_BACKEND=ws://service-cip-difyab-api:80 \
+                      --build-arg VITE_DIFY_EMBED=http://difyai.difyabdeveastus2001.com/ \
+                      --build-arg VITE_EMAIL=danny@danny.com \
+                      --build-arg VITE_PASSWORD="4#@imWt!A#epj5i!Hnx&RinsrWrmSH4X4Mv6A&gr&%XJ" \
+                      -t difyab-uxc .
                       echo ""
                       echo "List docker images and build number..."
                       docker image ls
                       echo $(Build.BuildId)
                       echo ""
-                      echo "Running Dify Agent Builder API docker image..."
-                      docker run -d --name difyab-api -p 8080:8000 \
-                      -e LLM_API_KEY=6ccab1fbe41d4194b7bde6d99fb05965 \
-                      -e LLM_URL=https://ank-ai-dev.openai.azure.com/ \
-                      -e LLM_MODEL=gpt-4o \
-                      -e LLM_API_VERSION=2024-10-21 \
-                      -e DIFY_BACKEND=http://dify-nginx.diffy \
-                      difyab-api
-                      #docker run -d -p 8080:8000 difyab-api
+                      echo "Running Dify Agent Builder UX Chatbox docker image..."
+                      docker run -d -p 5000:5000 difyab-uxc
                       echo ""
-                      echo "Testing Dify Agent Builder API docker image..."
+                      echo "Testing Dify Agent Builder UX Chatbox docker image..."
                       COUNTER=0
-                      #DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
-                      DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
-                      until [[ $DOCKER_DIFYABAPI_STATUS == "200" ]]; do
+                      DOCKER_DIFYABUXC_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:5000 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
+                      until [[ $DOCKER_DIFYAUXC_STATUS == "200" ]]; do
                         if [ "$COUNTER" -ge 24 ]; then exit 1; fi
-                        echo "    Waiting for docker difyab-api container..."
+                        echo "    Waiting for docker difyab-uxc container..."
                         sleep 5
                         COUNTER=$[$COUNTER +1]
-                      #  DOCKER_DIFYABAPI_STATUS=$((docker container inspect difyab-api || true) | jq -r '.[0].State.Status' | xargs)
-                        DOCKER_DIFYABAPI_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
+                        DOCKER_DIFYAUXC_STATUS=$(curl -s --connect-timeout 15 --max-time 30 http://localhost:5000 -o /dev/null -w '%{http_code}' | grep 200 || echo unsuccessful)
                       done
                       docker container ls
-                      #sleep 10
-                      curl --connect-timeout 15 --max-time 30 http://localhost:8080
-                      #curl -s --connect-timeout 15 --max-time 30 http://localhost:8080 -o /dev/null -w '%{http_code}' | grep 200
+                      curl --connect-timeout 15 --max-time 30 http://localhost:5000
                       echo ""
-                      echo "Stopping Dify Agent Builder API docker image..."
+                      echo "Stopping Dify Agent Builder UX Chatbox docker image..."
                       docker container ls
-                      docker container rm $(docker container ls | grep difyab-api | awk '{print $1}') --force
+                      docker container rm $(docker container ls | grep difyab-uxc | awk '{print $1}') --force
                       echo ""
-                      echo "Tagging Dify Agent Builder API docker image..."
+                      echo "Tagging Dify Agent Builder UX Chatbox docker image..."
                       AZURE_CR_NAME="cr$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
                       AZURE_CR_URL=$(az acr show --resource-group $AZURE_RG_NAME --name $AZURE_CR_NAME | jq -r '.loginServer' | xargs)
-                      docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:1.1.$(Build.BuildId)
-                      docker tag difyab-api $AZURE_CR_URL/v2/dify-poc/difyab-api:latest
+                      docker tag difyab-uxc $AZURE_CR_URL/v2/dify-poc/difyab-uxc:1.1.$(Build.BuildId)
+                      docker tag difyab-uxc $AZURE_CR_URL/v2/dify-poc/difyab-uxc:latest
                       echo ""
-                      echo "Pushing Dify Agent Builder API docker image..."
+                      echo "Pushing Dify Agent Builder UX Chatbox docker image..."
                       docker login https://$AZURE_CR_URL -u $(az acr credential show -n $AZURE_CR_NAME | jq -r '.username') -p $(az acr credential show -n $AZURE_CR_NAME | jq -r '.passwords[0]|.value')
-                      docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-api
+                      docker push --all-tags $AZURE_CR_URL/v2/dify-poc/difyab-uxc
                       # Check if the deployment already exists.  If it does, we will perform a rollout restart after we apply the yaml files.
-                      if kubectl get -n difyab deployments.apps --no-headers | grep deployment-difyab-api; then
-                        DIFYAB_API_EXISTS=yes
+                      if kubectl get -n difyab deployments.apps --no-headers | grep deployment-difyab-uxc; then
+                        DIFYAB_UXC_EXISTS=yes
                       else
-                        DIFYAB_API_EXISTS=no
+                        DIFYAB_UXC_EXISTS=no
                       fi
                       # Apply the yaml files whether or not the deployment already existed, just in case there are any changes.
+
                       echo ""
-                      echo "Deploying Dify Agent Builder Namespace to kubernetes..."
-                      kubectl apply -f service-ai-agents/ai-agents00-namespace.yaml
+                      echo "Deploying Dify Agent Builder UX Chatbox to kubernetes..."
+                      sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" ux-chatbox01-deployment.yaml > ux-chatbox01-deployment_aks.yaml
+                      kubectl apply -f ux-chatbox01-deployment_aks.yaml
                       echo ""
-                      echo "Deploying Dify Agent Builder API to kubernetes..."
-                      sed "s/__AZURE_CR_URL__/$AZURE_CR_URL/" service-ai-agents/ai-agents01-deployment.yaml > service-ai-agents/ai-agents01-deployment_aks.yaml
-                      kubectl apply -f service-ai-agents/ai-agents01-deployment_aks.yaml
-                      echo ""
-                      echo "Deploying Dify Agent Builder API ingress route to kubernetes..."
+                      echo "Deploying Dify Agent Builder UX Chatbox ingress route to kubernetes..."
                       DIFYAI_URL_DOMAIN="$(AZURE_PROJECT_NAME)$(AZURE_PROJECT_LE)$(AZURE_RG_LOCATION)$(AZURE_PROJECT_INSTANCE)"
-                      sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" service-ai-agents/ai-agents02-ingress.yaml > service-ai-agents/ai-agents02-ingress_aks.yaml
-                      kubectl apply -f service-ai-agents/ai-agents02-ingress_aks.yaml
-                      if [ $DIFYAB_API_EXISTS == "yes" ]; then
+                      sed "s/__DIFYAI_URL_DOMAIN__/$DIFYAI_URL_DOMAIN/" ux-chatbox02-ingress.yaml > ux-chatbox02-ingress_aks.yaml
+                      kubectl apply -f ux-chatbox02-ingress_aks.yaml
+                      if [ $DIFYAB_UXC_EXISTS == "yes" ]; then
                         echo ""
-                        echo "Rolling out new version of Dify Agent Builder API to kubernetes cluster..."
-                        DIFYAB_API_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-api-5bbf8cbf8c-nkrm2 | awk '{ print $1 }' | xargs)
-                        DIFYAB_API_VER=$(kubectl exec -n difyab pods/$DIFYAB_API_POD -- cat ado_build_version.txt)
-                        echo "    Dify Agent Builder Current Version: $DIFYAB_API_VER"
-                        kubectl rollout restart -n difyab deployment deployment-difyab-api
+                        echo "Rolling out new version of Dify Agent Builder UX Chatbox to kubernetes cluster..."
+                        DIFYAB_UXC_POD=$(kubectl get -n difyab pods --no-headers | grep deployment-difyab-uxc | head -n1 | awk '{ print $1 }' | xargs)
+                        DIFYAB_UXC_VER=$(kubectl exec -n difyab pods/$DIFYAB_UXC_POD -- cat ado_build_version.txt)
+                        echo "    Dify Agent Builder UX Chatbox Current Version: $DIFYAB_UXC_VER"
+                        kubectl rollout restart -n difyab deployment deployment-difyab-uxc
                         echo "    Rollout to new version triggered."
                       fi
                       echo ""
                       echo "Cleaning up files..."
-                      rm -rf service-ai-agents/ai-agents01-deployment_aks.yaml
-                      rm -rf service-ai-agents/ai-agents02-ingress_aks.yaml
+                      rm -rf ux-chatbox01-deployment_aks.yaml
+                      rm -rf ux-chatbox02-ingress_aks.yaml
                       echo "Task Successful"
   ############################################################
   ### END Stage to Deploy Dify Agent Builder               ###

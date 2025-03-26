@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-difyaiab-fe
-  namespace: difyaiab
+  name: deployment-difyab-uxc
+  namespace: difyab
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: difyaiab-fe
+      app: difyab-uxc
   template:
     metadata:
       labels:
-        app: difyaiab-fe
+        app: difyab-uxc
     spec:
       containers:
-        - name: difyaiab-fe
-          image: crdifyaipoc001.azurecr.io/v2/dify-poc/difyaiab-fe:latest
+        - name: difyab-uxc
+          image: __AZURE_CR_URL__/v2/dify-poc/difyab-uxc:latest
           resources:
             requests:
               cpu: '250m'
@@ -30,13 +30,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: hpa-difyaiab-fe
-  namespace: difyaiab
+  name: hpa-difyab-uxc
+  namespace: difyab
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: deployment-difyaiab-fe
+    name: deployment-difyab-uxc
   minReplicas: 1
   maxReplicas: 10
   metrics:
@@ -52,35 +52,35 @@ spec:
         target:
           type: Utilization
           averageUtilization: 50
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: service-lb-difyab-uxc
+#   namespace: difyab
+# spec:
+#   selector:
+#     app: difyab-uxc
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 5000
+#   type: LoadBalancer
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-lb-difyaiab-fe
-  namespace: difyaiab
+  name: service-cip-difyab-uxc
+  namespace: difyab
 spec:
   selector:
-    app: difyaiab-fe
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: LoadBalancer
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: service-cip-difyaiab-fe
-  namespace: difyaiab
-spec:
-  selector:
-    app: difyaiab-fe
+    app: difyab-uxc
   ports:
     - protocol: TCP
       port: 80
       targetPort: 5000
   type: ClusterIP
-  sessionAffinity: ClientIP
-  sessionAffinityConfig:
-    clientIP:
-      timeoutSeconds: 600
+  # sessionAffinity: ClientIP
+  # sessionAffinityConfig:
+  #   clientIP:
+  #     timeoutSeconds: 600
