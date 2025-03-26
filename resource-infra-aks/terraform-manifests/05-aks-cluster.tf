@@ -87,5 +87,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
     load_balancer_sku = "standard"
   }
 
+  api_server_access_profile {
+    authorized_ip_ranges = ["128.85.200.44/32"]
+  }
+
   tags = local.tags
 }
