@@ -8,6 +8,7 @@
 # Add monorepo changes checks - https://medium.com/@taleodor/using-monorepo-do-not-rebuild-unchanged-components-in-ci-c386e7c03426
 # Remove Vnet and Snet for now.  We readd a them later with a NSG for layered security.
 # Terraform destroy fails with PIP still in use by AKS
+# ContainerInsights in not deleted by terraform, possibly because it is not explicitly created in terraform
 # Single LogAnalyticsWorkspace for all Projects - PLATFORM
 # Single ContainerInsights for all Projects - PLATFORM
 # Single ACR for all Projects - PLATFORM
