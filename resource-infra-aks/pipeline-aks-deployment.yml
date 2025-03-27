@@ -1,20 +1,21 @@
 ############################################################
 ############# TO DO BEFORE WE GO TO PRODUCTION #############
-# Kubernetes cluster needs ACL on API in terraform code
 # Traefik should have a default ipallow list on every entrypoint
 # Terraform code should not show as changed every time we run our plan command
 # Prometheus stack should have traefik dashboard added by default
 # Tune cpu and ram for nginx, whoami, dify, api, and uxc
 # Add monorepo changes checks - https://medium.com/@taleodor/using-monorepo-do-not-rebuild-unchanged-components-in-ci-c386e7c03426
-# Remove Vnet and Snet for now.  We readd a them later with a NSG for layered security.
 # Terraform destroy fails with PIP still in use by AKS
-# ContainerInsights in not deleted by terraform, possibly because it is not explicitly created in terraform
-# Single Storage Account
+# Remove VNET and SNET for our Proof Of Concept.  We readd a them in Production with an NSG for layered security.
+# Explicitly create ContainerInsights in Terraform, so that Terraform can remove it on Destroy.
+############# GET CLARIFICATION ON THE FOLLOWING #############
+# Single Storage Account - Per subscription, Resource Group, Project, Region, ???
 # Single LogAnalyticsWorkspace for all Projects - PLATFORM
 # Single ContainerInsights for all Projects - PLATFORM
 # Single ACR for all Projects - PLATFORM
-# Need Cluster for ADO Agents with static Egress IP – Ask Billy for help
-# Need to work with Mark on testing – Ask Billy for help
+############# GET HELP ON THE FOLLOWING #############
+# Need Cluster for ADO Agents with static Egress IP
+# Need to work with Mark on testing
 ############################################################
 
 stages:
