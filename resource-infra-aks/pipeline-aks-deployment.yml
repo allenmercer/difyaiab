@@ -9,10 +9,10 @@
 # Remove Vnet and Snet for now.  We readd a them later with a NSG for layered security.
 # Terraform destroy fails with PIP still in use by AKS
 # ContainerInsights in not deleted by terraform, possibly because it is not explicitly created in terraform
+# Single Storage Account
 # Single LogAnalyticsWorkspace for all Projects - PLATFORM
 # Single ContainerInsights for all Projects - PLATFORM
 # Single ACR for all Projects - PLATFORM
-# Single StorageAccount
 # Need Cluster for ADO Agents with static Egress IP – Ask Billy for help
 # Need to work with Mark on testing – Ask Billy for help
 ############################################################
